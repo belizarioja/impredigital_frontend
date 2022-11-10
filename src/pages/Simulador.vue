@@ -11,7 +11,7 @@
           option-label="name"
           option-value="cod"
           @update:model-value="changeSede()"
-          label="Seleccione Servicio"
+          label="Seleccione Cliente"
           style="margin: 20px;" />
         <q-select
           dense
@@ -182,6 +182,9 @@
           <div class="text-h6 ">Resultado</div>
         </q-card-section>
         <q-card-section>
+          <span :class="statusProcess ? 'text-positive' : 'text-negative'">{{dateInicioPrueba}}</span>
+        </q-card-section>
+        <q-card-section>
           <span :class="statusProcess ? 'text-positive' : 'text-negative'">{{resultProcess}}</span>
         </q-card-section>
         <q-card-section>
@@ -189,6 +192,9 @@
         </q-card-section>
         <q-card-section>
           <span :class="statusProcess ? 'text-positive' : 'text-negative'">{{fechaProcess}}</span>
+        </q-card-section>
+        <q-card-section>
+          <span :class="statusProcess ? 'text-positive' : 'text-negative'">{{dateFinPrueba}}</span>
         </q-card-section>
       </q-card>
 
@@ -200,6 +206,8 @@
 import { ref } from 'vue'
 import { Notify } from 'quasar'
 import axios from 'axios'
+import moment from 'moment'
+
 const config = require('../config/endpoints.js')
 const ENDPOINT_PATH_V2 = config.endpoint_path_v2
 
@@ -232,7 +240,9 @@ export default {
       tasaigtf: ref(0),
       baseigtf: ref(0),
       impuestoigtf: ref(0),
-      loading: ref(false)
+      loading: ref(false),
+      dateInicioPrueba: ref(''),
+      dateFinPrueba: ref('')
     }
   },
   data () {
@@ -279,57 +289,67 @@ export default {
       if (Number(this.modeltipo.cod) !== 3) {
         this.relacionado = undefined
       }
-      this.statusProcess = false
-      this.resultProcess = ''
-      this.messageProcess = ''
-      this.fechaProcess = ''
-      const trackingid = this.generateRandomString()
-      const headersjwt = {
-        headers: {
-          Authorization: 'Bearer ' + this.tokenservicios
-        }
-      }
-      const body = {
-        rif: this.rif,
-        trackingid: trackingid,
-        nombrecliente: this.nombre,
-        rifcedulacliente: this.cedula,
-        direccioncliente: this.direccion,
-        telefonocliente: this.telefono,
-        relacionado: this.relacionado,
-        idtipodocumento: Number(this.modeltipo.cod),
-        subtotal: Number(this.subtotal),
-        exento: Number(this.exento),
-        tasag: Number(this.tasag),
-        baseg: Number(this.baseg),
-        impuestog: Number(this.impuestog),
-        tasar: Number(this.tasar),
-        baser: Number(this.baser),
-        impuestor: Number(this.impuestor),
-        tasaigtf: Number(this.tasaigtf),
-        baseigtf: Number(this.baseigtf),
-        impuestoigtf: Number(this.impuestoigtf),
-        total: Number(this.total)
-      }
-      // console.log(body)
-      axios.post(ENDPOINT_PATH_V2 + 'facturacion', body, headersjwt).then(async response => {
-        console.log(response.data)
-        if (response.status === 200) {
-          this.statusProcess = response.data.success
-          this.resultProcess = 'Transmisión EXITOSA!'
-          this.messageProcess = response.data.data.numerodocumento
-          this.fechaProcess = response.data.data.fecha + ' ' + response.data.data.hora
-          // console.log(response.status)
-          this.limpiar()
-        }
-        if (response.status === 202) {
-          this.statusProcess = response.data.success
-          this.resultProcess = 'Transmisión FALLIDA!'
-          this.messageProcess = response.data.error.message
+      this.dateInicioPrueba = moment().format('YYYY-MM-DD HH:mm:ss')
+      for (let i = 0; i < 100; i++) {
+        for (const j in this.optionssede) {
+          const sede = this.optionssede[j]
+          this.rif = sede.rif
+          this.tokenservicios = sede.tokenservicios
+          this.statusProcess = false
+          this.resultProcess = ''
+          this.messageProcess = ''
           this.fechaProcess = ''
-          // console.log(response.status)
+          const trackingid = this.generateRandomString()
+          const headersjwt = {
+            headers: {
+              Authorization: 'Bearer ' + this.tokenservicios
+            }
+          }
+          const body = {
+            rif: this.rif,
+            trackingid: trackingid,
+            nombrecliente: this.nombre,
+            rifcedulacliente: this.cedula,
+            direccioncliente: this.direccion,
+            telefonocliente: this.telefono,
+            relacionado: this.relacionado,
+            idtipodocumento: Number(this.modeltipo.cod),
+            subtotal: Number(this.subtotal),
+            exento: Number(this.exento),
+            tasag: Number(this.tasag),
+            baseg: Number(this.baseg),
+            impuestog: Number(this.impuestog),
+            tasar: Number(this.tasar),
+            baser: Number(this.baser),
+            impuestor: Number(this.impuestor),
+            tasaigtf: Number(this.tasaigtf),
+            baseigtf: Number(this.baseigtf),
+            impuestoigtf: Number(this.impuestoigtf),
+            total: Number(this.total)
+          }
+          // console.log(body)
+          axios.post(ENDPOINT_PATH_V2 + 'facturacion', body, headersjwt).then(async response => {
+            console.log(response.data)
+            if (response.status === 200) {
+              this.statusProcess = response.data.success
+              this.resultProcess = 'Transmisión EXITOSA!'
+              this.messageProcess = response.data.data.numerodocumento
+              this.fechaProcess = response.data.data.fecha + ' ' + response.data.data.hora
+            // console.log(response.status)
+            // this.limpiar()
+            }
+            if (response.status === 202) {
+              this.statusProcess = response.data.success
+              this.resultProcess = 'Transmisión FALLIDA!'
+              this.messageProcess = response.data.error.message
+              this.fechaProcess = ''
+            // console.log(response.status)
+            }
+          })
         }
-      })
+      }
+
+      this.dateFinPrueba = moment().format('YYYY-MM-DD HH:mm:ss')
     },
     limpiar () {
       this.cedula = ''

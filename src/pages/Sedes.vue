@@ -11,6 +11,7 @@
     >
       <template v-slot:top>
         <q-btn
+         v-if="co_rol === '1'"
          color="primary"
          :disabled="btndisable"
          label="Crear emisor"
@@ -161,6 +162,7 @@ export default {
       direccion: ref(''),
       telefono: ref(''),
       filter: ref(''),
+      co_rol: sessionStorage.getItem('co_rol'),
       loading: ref(false)
     }
   },
@@ -197,7 +199,7 @@ export default {
           sortable: true
         }, */
         { name: 'identificador', align: 'center', label: 'Identificador', field: 'identificador', style: 'font-size:20px' },
-        { name: 'corelativo', align: 'center', label: 'Co-relativo', field: 'corelativo', style: 'font-size:20px' }
+        { name: 'corelativo', align: 'center', label: 'Correlativo', field: 'corelativo', style: 'font-size:20px' }
       ],
       rowsdetails: [],
       btndisable: true

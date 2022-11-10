@@ -1,8 +1,8 @@
 <template>
   <div class="bg-primary window-height window-width row justify-center">
     <div class="column">
-      <div class="justify-center" style="margin: 20px 0;display: grid;">
-        <img src="logo_impredigital.jpg" style="max-width: 200px;" />
+      <div class="justify-center" style="margin: 20px 0 0 0;display: grid;">
+        <img src="logo_impredigital.jpg" style="max-width: 180px;" />
       </div>
       <div class="row justify-center">
         <h5 class="text-h5 text-white q-my-md">Inicie sesión</h5>
@@ -17,15 +17,15 @@
               </q-form>
             </q-card-section>
             <q-card-actions class="q-px-md">
-              <q-btn unelevated color="primary" type="submit"  :loading="loading"  size="lg" class="full-width" label="Login" >
+              <q-btn unelevated color="primary" type="submit"  :loading="loading"  size="lg" class="full-width" label="Ingresar" >
                 <template v-slot:loading>
                   <q-spinner-facebook />
                 </template>
               </q-btn>
             </q-card-actions>
-            <q-card-section class="text-center q-pa-none">
+            <!-- <q-card-section class="text-center q-pa-none">
               <p class="text-grey-6">¿Olvidó contraseña?</p>
-            </q-card-section>
+            </q-card-section> -->
           </q-card>
         </form>
       </div>
@@ -64,12 +64,18 @@ export default {
           console.log(response)
           console.log(response.data)
           if (response.status === 200) {
+            sessionStorage.setItem('rif_sede', response.data.resp.rif)
             sessionStorage.setItem('co_rol', response.data.resp.idrol)
             sessionStorage.setItem('tx_nombre', response.data.resp.nombre)
             sessionStorage.setItem('tx_rol', response.data.resp.rol)
             sessionStorage.setItem('co_sede', response.data.resp.idserviciosmasivo || 0)
             sessionStorage.setItem('tx_sede', response.data.resp.razonsocial || '')
-            this.$router.push('/dashboard')
+            if (response.data.resp.idrol === '3') {
+              this.$router.push('/dashboard')
+            } else {
+              // this.$router.push('/dashboard')
+              this.$router.push('/emisores')
+            }
           } else {
             this.loading = false
             Notify.create('Usuario no encontrado o contraseña incorrecta')

@@ -10,6 +10,7 @@
             <q-select
               v-if="co_rol === '1' || co_rol === '2'"
               label="Buscar por Nombre o RIF del Emisor"
+              :disable="disabledSede"
               dense
               filled
               v-model="modelsede"
@@ -95,6 +96,7 @@
             <q-card-section class="q-pa-none">
               <table-top
                 v-if="co_rol === '1' || co_rol === '2'"
+                :changesede="changeSedeChild"
                 v-bind:idserviciohijo="idserviciosmasivo"
                 v-bind:dateFrom="dateFrom"
                 v-bind:dateTo="dateTo"
@@ -141,6 +143,7 @@ export default defineComponent({
   },
   setup () {
     return {
+      disabledSede: ref(false),
       dateFrom: ref(moment().format('YYYY-MM-DD')),
       dateTo: ref(moment().format('YYYY-MM-DD')),
       totalclientes: ref(0),
@@ -155,7 +158,10 @@ export default defineComponent({
       tipodocumento: ref('Todos'),
       optionsfechas: ref([{ cod: 1, name: 'Hoy' }, { cod: 4, name: 'Ayer' }, { cod: 2, name: 'En 1 semana' }, { cod: 3, name: 'En 1 mes' }]),
       co_rol: sessionStorage.getItem('co_rol'),
-      co_sede: sessionStorage.getItem('co_sede')
+      co_sede: sessionStorage.getItem('co_sede'),
+      co_sede_seleted: sessionStorage.getItem('co_sede_seleted'),
+      tx_sede_seleted: sessionStorage.getItem('tx_sede_seleted'),
+      rif_sede_seleted: sessionStorage.getItem('rif_sede_seleted')
     }
   },
   methods: {
@@ -196,6 +202,13 @@ export default defineComponent({
           console.log('Sorry, we are out of.')
       }
       // this.listarfacturas()
+    },
+    changeSedeChild (reg) {
+      console.log('changeSedeChild')
+      this.idserviciosmasivo = reg.cod
+      reg.namerif = reg.razonsocial + ' ' + reg.rif
+      this.serviciosmasivo = reg.namerif
+      this.modelsede = reg
     },
     changeSede () {
       console.log(this.modelsede?.cod)
@@ -261,6 +274,20 @@ export default defineComponent({
     this.listartipos()
     this.listarsedes()
     this.idserviciosmasivo = this.co_rol === '3' ? this.co_sede : undefined
+
+    console.log('Mounted')
+    console.log(this.tx_sede_seleted)
+    if (this.co_sede_seleted) {
+      const obj = {}
+      obj.cod = this.co_sede_seleted
+      obj.rif = this.rif_sede_seleted
+      obj.razonsocial = this.tx_sede_seleted
+      this.idserviciosmasivo = this.co_sede_seleted
+      obj.namerif = obj.razonsocial + ' ' + obj.rif
+      this.serviciosmasivo = obj.namerif
+      this.modelsede = obj
+      this.disabledSede = true
+    }
   }
 })
 </script>

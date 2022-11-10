@@ -129,6 +129,7 @@ export default defineComponent({
 
         this.totalbase = this.completarDecimales(this.totalbase)
         this.totalimpg = this.completarDecimales(this.totalimpg)
+        this.totalimpr = this.completarDecimales(this.totalimpr)
         this.totalimpigtf = this.completarDecimales(this.totalimpigtf)
         this.totalimp = this.completarDecimales(this.totalimp)
       }).catch(error => {

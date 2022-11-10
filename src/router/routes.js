@@ -3,6 +3,9 @@ const routes = [
   {
     path: '/',
     component: () => import('layouts/LoginLayout.vue')
+  }, {
+    path: '/emisores',
+    component: () => import('layouts/SedesLayout.vue')
   },
   {
     path: '/dashboard',

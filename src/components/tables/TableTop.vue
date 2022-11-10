@@ -13,7 +13,7 @@
       <template v-slot:body="props">
           <q-tr :props="props">
             <q-td key="razonsocial" :props="props" style="display: grid;text-align: left;height: 51px;">
-              <span style="font-weight: bolder; width: 120px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.razonsocial }}</span>
+              <span @click="goToReporte(props.row)" style="font-weight: bolder; width: 120px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;cursor: pointer;">{{ props.row.razonsocial }}</span>
               <span style="font-style: italic;">RIF: {{ props.row.rif }}</span>
             </q-td>
             <q-td key="total" :props="props">
@@ -46,8 +46,7 @@ const ENDPOINT_PATH_V2 = config.endpoint_path_v2
 
 export default defineComponent({
   name: 'TableTop',
-  props: ['idtipodochijo', 'dateFrom', 'dateTo', 'idserviciohijo'],
-
+  props: ['idtipodochijo', 'dateFrom', 'dateTo', 'idserviciohijo', 'changesede'],
   data () {
     return {
       columns: [
@@ -67,6 +66,11 @@ export default defineComponent({
     }
   },
   methods: {
+    goToReporte (reg) {
+      console.log(reg)
+      this.changesede(reg)
+      // this.$emit('changeSedeChild', reg)
+    },
     listarTop () {
       const body = {
         idtipodocumento: this.idtipodochijo || undefined,

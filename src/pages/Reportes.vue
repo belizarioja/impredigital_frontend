@@ -11,6 +11,7 @@
           class="col-md-4 col-sm-12 col-xs-12"
           filled
           v-model="modelsede"
+          :disable="disabledSede"
           use-input
           hide-selected
           fill-input
@@ -131,7 +132,7 @@
           :options="optionsimpuesto"
           option-label="name"
           option-value="cod"
-          label="Tipo de Gravado"
+          label="Tipo de Impuesto"
           @update:model-value="changeImpuesto()"
           style="padding: 5px;"
         />
@@ -141,7 +142,7 @@
         class="my-sticky-header-table"
         :title="modeltipo.cod ? modeltipo.name : titulotabla"
         :rows="rows"
-        :columns="columns"
+        :columns="co_rol !=='2' ? columns : columns2"
         row-key="name"
         v-model:pagination="initialPagination"
         style="overflow: auto;"
@@ -158,7 +159,7 @@
         </template>
         <template v-slot:body="props">
           <q-tr :props="props">
-            <q-td key="rif" :props="props" style="display: grid;text-align:left;height: 51px;">
+            <q-td v-if="co_rol !== '2'" key="rif" :props="props" style="display: grid;text-align:left;height: 51px;">
               <span style="font-weight: bolder; width: 200px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.razonsocial }}</span>
               <span style="font-style: italic;">RIF: {{ props.row.rif }}</span>
             </q-td>
@@ -220,6 +221,17 @@
                 icon="receipt_long"
                 @click="openDetail(props.row)" />
             </q-td>
+            <q-td key="exportar" :props="props">
+              <q-btn
+                color="negative"
+                label="PDF"
+                style="    margin-right: 10px;"
+                @click="openDetail(props.row)" />
+              <q-btn
+                color="info"
+                label="XML"
+                @click="exportXMLDetail(props.row)" />
+            </q-td>
           </q-tr>
         </template>
       </q-table>
@@ -228,7 +240,7 @@
           <q-item>
             <q-item-section avatar>
               <q-avatar>
-                <img src="logo_impredigital.jpg">
+                <img :src="registro.logo" onerror="this.src='default.svg'">
               </q-avatar>
             </q-item-section>
 
@@ -311,7 +323,6 @@
           </q-item>
           <q-separator spaced inset="item" />
           <q-card-actions align="right">
-          <q-btn class="q-ml-sm" color="info" label="Exportar XML" @click="exportXML(rowtempxml)"/>
             <q-btn label="Cerrar" color="negative" v-close-popup/>
           </q-card-actions>
         </q-card>
@@ -352,6 +363,7 @@ function wrapCsvValue (val, formatFn, row) {
 export default {
   setup () {
     return {
+      disabledSede: ref(false),
       viewdetail: ref(false),
       idserviciosmasivo: ref(undefined),
       idtipodocumento: ref(undefined),
@@ -400,7 +412,27 @@ export default {
         { name: 'baseigtf', label: 'Imponible IGTF', field: 'baseigtf' },
         { name: 'impuestoigtf', label: 'Impuesto IGTF', field: 'impuestoigtf' },
         { name: 'relacionado', label: 'Relacionado', field: 'relacionado' },
-        { name: 'detail', label: 'Ver' }
+        { name: 'detail', label: 'Ver', align: 'center' },
+        { name: 'exportar', label: 'Exportar', align: 'center' }
+      ],
+      columns2: [
+        { name: 'trackingid', align: 'left', label: 'Referencia ID', field: 'trackingid', sortable: true },
+        { name: 'tipodocumento', align: 'left', label: 'Documento', sortable: true },
+        { name: 'fecha', align: 'left', label: 'Fecha', field: 'fecha' },
+        { name: 'nombrecliente', align: 'left', label: 'Nombre Cliente', field: 'nombrecliente' },
+        { name: 'exento', label: 'Exento', field: 'exento' },
+        { name: 'tasag', label: 'Tasa IVA', field: 'tasag' },
+        { name: 'baseg', label: 'Imponible IVA', field: 'baseg' },
+        { name: 'impuestog', label: 'Impuesto IVA', field: 'impuestog' },
+        { name: 'tasar', label: 'Tasa Reducido', field: 'tasar' },
+        { name: 'baser', label: 'Imponible Reducido', field: 'baser' },
+        { name: 'impuestor', label: 'Impuesto Reducido', field: 'impuestor' },
+        { name: 'tasaigtf', label: 'Tasa IGTF', field: 'tasaigtf' },
+        { name: 'baseigtf', label: 'Imponible IGTF', field: 'baseigtf' },
+        { name: 'impuestoigtf', label: 'Impuesto IGTF', field: 'impuestoigtf' },
+        { name: 'relacionado', label: 'Relacionado', field: 'relacionado' },
+        { name: 'detail', label: 'Ver', align: 'center' },
+        { name: 'exportar', label: 'Exportar', align: 'center' }
       ],
       rows: [],
       tempxml: [],
@@ -423,7 +455,10 @@ export default {
       baserdetail: '',
       exentodetail: '',
       baseigtfdetail: '',
-      registro: {}
+      registro: {},
+      co_sede_seleted: sessionStorage.getItem('co_sede_seleted'),
+      tx_sede_seleted: sessionStorage.getItem('tx_sede_seleted'),
+      rif_sede_seleted: sessionStorage.getItem('rif_sede_seleted')
     }
   },
   methods: {
@@ -529,12 +564,17 @@ export default {
       addFooters(doc)
       doc.save('impredigital.pdf')
     },
+    exportXMLDetail (reg) {
+      this.rowtempxml.push(this.detailXML(reg))
+      this.exportXML(this.rowtempxml)
+    },
     openDetail (reg) {
       this.rowtempxml = []
       reg.fecha = moment(reg.fecha, 'DD/MM/YYYY HH:mm:ss')
       this.rowtempxml.push(this.detailXML(reg))
       // console.log(this.rowtempxml)
       this.viewdetail = true
+      this.registro.logo = reg.logo
       this.registro.razonsocialdetail = reg.razonsocial
       this.registro.rifdetail = reg.rif
       this.registro.direcciondetail = reg.direccion
@@ -557,6 +597,7 @@ export default {
       this.registro.impuestoigtfdetail = reg.impuestoigtf
 
       this.registro.totaldetail = Number(reg.impuestogN) + Number(reg.impuestorN) + Number(reg.impuestoigtfN)
+      this.registro.totaldetail = this.completarDecimales(this.registro.totaldetail)
     },
     searchEmisor (val, update, abort) {
       if (val.length < 3) {
@@ -662,6 +703,7 @@ export default {
         const datos = response.data.data
         const obj = {}
         obj.cod = datos[0].id
+        obj.logo = ENDPOINT_PATH_V2 + 'imagen/' + datos[0].rif + '.png'
         obj.idserviciosmasivo = datos[0].idserviciosmasivo
         obj.razonsocial = datos[0].razonsocial
         obj.rif = datos[0].rif
@@ -738,6 +780,7 @@ export default {
         for (const i in datos) {
           const obj = {}
           obj.cod = datos[i].id
+          obj.logo = ENDPOINT_PATH_V2 + 'imagen/' + datos[i].rif + '.png'
           obj.idserviciosmasivo = datos[i].idserviciosmasivo
           obj.razonsocial = datos[i].razonsocial
           obj.rif = datos[i].rif
@@ -850,6 +893,24 @@ export default {
     }
   },
   mounted () {
+    console.log('Mounted')
+    console.log(this.tx_sede_seleted)
+    if (this.co_sede_seleted) {
+      const obj = {}
+      obj.cod = this.co_sede_seleted
+      obj.rif = this.rif_sede_seleted
+      obj.razonsocial = this.tx_sede_seleted
+      this.idserviciosmasivo = this.co_sede_seleted
+      obj.namerif = obj.razonsocial + ' ' + obj.rif
+      this.serviciosmasivo = obj.namerif
+      this.modelsede = obj
+      this.disabledSede = true
+      this.disable = false
+    }
+    console.log(this.co_rol)
+    if (this.co_rol === '3') {
+      this.disable = false
+    }
     this.listarsedes()
     this.listartipos()
     this.listarfacturas()

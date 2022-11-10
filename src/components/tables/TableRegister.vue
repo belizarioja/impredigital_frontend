@@ -8,6 +8,8 @@
         :loading="loading"
         row-key="name"
         :pagination="initialPagination"
+        :visible-columns="visibleColumns"
+
       >
        <!-- <template v-slot:loading>
           <q-inner-loading showing color="primary" />
@@ -15,14 +17,14 @@
         <template v-slot:top-right>
           <div class="row">
           <span class="col-md-4 col-sm-4 col-xs-12" style="font-size: 20px;">Exportar:</span>
-          <q-btn class="q-ml-sm col-md-2 col-sm-2 col-xs-3" color="primary" label="PDF" @click="exportPDF" />
+          <q-btn class="q-ml-sm col-md-2 col-sm-2 col-xs-3" color="negative" label="PDF" @click="exportPDF" />
           <q-btn class="q-ml-sm col-md-2 col-sm-2 col-xs-3" color="secondary" label="CSV" @click="exportTable"/>
           <q-btn class="q-ml-sm col-md-2 col-sm-2 col-xs-3" color="info" label="XML" @click="exportXML(tempxml)"/>
         </div>
         </template>
         <template v-slot:body="props">
           <q-tr :props="props">
-            <q-td key="rif" :props="props" style="display: grid;text-align: left;height: 51px;">
+            <q-td v-if="co_rol !== '2'" key="rif" :props="props" style="display: grid;text-align: left;height: 51px;">
               <span style="font-weight: bolder; width: 180px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.razonsocial }}</span>
               <span style="font-style: italic;">RIF: {{ props.row.rif }}</span>
             </q-td>
@@ -63,6 +65,17 @@
                 icon="receipt_long"
                 @click="openDetail(props.row)" />
             </q-td>
+            <q-td key="exportar" :props="props">
+              <q-btn
+                color="negative"
+                label="PDF"
+                style="    margin-right: 10px;"
+                @click="openDetail(props.row)" />
+              <q-btn
+                color="info"
+                label="XML"
+                @click="exportXMLDetail(props.row)" />
+            </q-td>
           </q-tr>
         </template>
       </q-table>
@@ -71,7 +84,7 @@
           <q-item>
             <q-item-section avatar>
               <q-avatar>
-                <img src="logo_impredigital.jpg">
+                <img :src="registro.logo" onerror="this.src='default.svg'">
               </q-avatar>
             </q-item-section>
 
@@ -154,7 +167,6 @@
           </q-item>
           <q-separator spaced inset="item" />
           <q-card-actions align="right">
-            <q-btn class="q-ml-sm" color="info" label="Exportar XML" @click="exportXML(rowtempxml)"/>
             <q-btn label="Cerrar" color="negative" v-close-popup/>
           </q-card-actions>
         </q-card>
@@ -202,6 +214,7 @@ export default defineComponent({
       viewdetail: ref(false),
       dateHoy: moment().format('DD/MM/YYYY'),
       tx_nombre: sessionStorage.getItem('tx_nombre'),
+      co_rol: sessionStorage.getItem('co_rol'),
       initialPagination: {
         page: 1,
         rowsPerPage: 10 // 0 means all rows
@@ -210,6 +223,9 @@ export default defineComponent({
   },
   data () {
     return {
+      visibleColumns: this.co_rol !== '2'
+        ? ['rif', 'trackingid', 'tipodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar']
+        : ['trackingid', 'tipodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar'],
       columns: [
         {
           name: 'rif',
@@ -227,7 +243,8 @@ export default defineComponent({
         { name: 'reducido', label: 'Reducido' },
         { name: 'igtf', label: 'IGTF' },
         { name: 'relacionado', label: 'Relacionado', field: 'relacionado' },
-        { name: 'detail', label: 'Detalles' }
+        { name: 'detail', label: 'Ver', align: 'center' },
+        { name: 'exportar', label: 'Exportar', align: 'center' }
       ],
       rows: [],
       tempxml: [],
@@ -347,6 +364,7 @@ export default defineComponent({
         const datos = response.data.data
         const obj = {}
         obj.cod = datos[0].id
+        obj.logo = ENDPOINT_PATH_V2 + 'imagen/' + datos[0].rif + '.png'
         obj.idserviciosmasivo = datos[0].idserviciosmasivo
         obj.razonsocial = datos[0].razonsocial
         obj.rif = datos[0].rif
@@ -417,6 +435,7 @@ export default defineComponent({
           // console.log(datos[i])
           const obj = {}
           obj.cod = datos[i].id
+          obj.logo = ENDPOINT_PATH_V2 + 'imagen/' + datos[i].rif + '.png'
           obj.idserviciosmasivo = datos[i].idserviciosmasivo
           obj.relacionado = datos[i].relacionado
           obj.razonsocial = datos[i].razonsocial
@@ -523,11 +542,16 @@ export default defineComponent({
     updateRegistros () {
       this.listarfacturas()
     },
+    exportXMLDetail (reg) {
+      this.rowtempxml.push(this.detailXML(reg))
+      this.exportXML(this.rowtempxml)
+    },
     openDetail (reg) {
       this.rowtempxml = []
       reg.fecha = moment(reg.fecha, 'DD/MM/YYYY HH:mm:ss')
       this.rowtempxml.push(this.detailXML(reg))
       this.viewdetail = true
+      this.registro.logo = reg.logo
       this.registro.razonsocialdetail = reg.razonsocial
       this.registro.rifdetail = reg.rif
       this.registro.direcciondetail = reg.direccion
@@ -550,6 +574,7 @@ export default defineComponent({
       this.registro.impuestoigtfdetail = reg.impuestoigtf
 
       this.registro.totaldetail = Number(reg.impuestogN) + Number(reg.impuestorN) + Number(reg.impuestoigtfN)
+      this.registro.totaldetail = this.completarDecimales(this.registro.totaldetail)
     }
   },
   watch: {

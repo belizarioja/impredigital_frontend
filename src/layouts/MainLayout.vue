@@ -17,7 +17,12 @@
         </q-toolbar-title>
 
         <div style="display: flex;justify-content: center;align-items: center;">
-          <img src="logo_impredigital.jpg" width="50" />
+          <q-btn
+            v-if="co_rol === '1' || co_rol === '2'"
+            color="info"
+            icon="add_business"
+            :label="co_sede_seleted ? 'Cambiar de Emisor' : 'Seleccionar Emisor'"
+            @click="sedeschange" />
         </div>
       </q-toolbar>
     </q-header>
@@ -32,7 +37,10 @@
           header
           style="display: grid;justify-content: center;align-items: center;background: #1976d2;"
         >
-          <img src="logo_impredigital.jpg" width="200" />
+          <img v-if="co_rol === '3'" :src="logo_sede" onerror="this.src='logo_impredigital.jpg'" width="200" />
+          <img v-if="co_rol === '1'" src="logo_impredigital.jpg" width="200" />
+          <img v-if="co_rol === '2'" src="logo_seniat.png" width="200" />
+          v-if="co_rol === '1' || co_rol === '2'"
         </q-item-label>
 
         <!-- <EssentialLink
@@ -78,7 +86,7 @@
         </q-item>
         <q-item clickable v-ripple @click="anulaciones">
           <q-item-section avatar>
-            <q-icon color="black" name="summarize" />
+            <q-icon color="black" name="bookmark_remove" />
           </q-item-section>
           <q-item-section>
             <div>Anulaciones</div>
@@ -124,11 +132,15 @@
 <script>
 
 import { defineComponent, ref } from 'vue'
+const config = require('../config/endpoints.js')
+const ENDPOINT_PATH_V2 = config.endpoint_path_v2
 
 export default defineComponent({
   name: 'MainLayout',
   data () {
     return {
+      co_sede_seleted: sessionStorage.getItem('co_sede_seleted'),
+      logo_sede: ENDPOINT_PATH_V2 + 'imagen/' + sessionStorage.getItem('rif_sede') + '.png',
       tx_usuario: sessionStorage.getItem('rol_name'),
       tx_nombre: sessionStorage.getItem('tx_nombre'),
       co_rol: sessionStorage.getItem('co_rol'),
@@ -152,6 +164,12 @@ export default defineComponent({
     },
     sedes () {
       this.$router.push('/sedes')
+    },
+    sedeschange () {
+      sessionStorage.removeItem('co_sede_seleted')
+      sessionStorage.removeItem('tx_sede_seleted')
+      sessionStorage.removeItem('rif_sede_seleted')
+      this.$router.push('/emisores')
     },
     reportes () {
       this.$router.push('/reportes')
@@ -182,6 +200,9 @@ export default defineComponent({
         },
         persistent: true
       }).onOk(() => {
+        sessionStorage.removeItem('co_sede_seleted')
+        sessionStorage.removeItem('tx_sede_seleted')
+        sessionStorage.removeItem('rif_sede_seleted')
         sessionStorage.removeItem('tx_rol')
         sessionStorage.removeItem('tx_nombre')
         sessionStorage.removeItem('tx_sede')
