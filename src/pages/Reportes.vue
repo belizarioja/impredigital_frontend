@@ -64,13 +64,13 @@
     </div>
     <div class="row">
       <q-select
-          v-if="co_rol === '1' || co_rol === '2'"
           label="Buscar por Nombre o RIF del cliente"
           dense
           class="col-md-4 col-sm-6 col-xs-12"
           filled
           v-model="modelcliente"
           use-input
+          :disable="disable"
           hide-selected
           fill-input
           clearable
@@ -81,6 +81,7 @@
           :options="optionscliente"
           @update:model-value="changeCliente()"
           @input:="changeCliente()"
+          @filter="searchCliente"
           style="padding: 5px;"
         />
         <q-input
@@ -144,7 +145,7 @@
         :rows="rows"
         :columns="co_rol !=='2' ? columns : columns2"
         row-key="name"
-        v-model:pagination="initialPagination"
+        :pagination="initialPagination"
         style="overflow: auto;"
         :loading="loading"
         no-data-label="No hay registros!"
@@ -163,12 +164,18 @@
               <span style="font-weight: bolder; width: 200px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.razonsocial }}</span>
               <span style="font-style: italic;">RIF: {{ props.row.rif }}</span>
             </q-td>
-            <q-td key="trackingid" :props="props">
+            <q-td v-if="co_rol !== '2'"  key="trackingid" :props="props">
               {{ props.row.trackingid }}
             </q-td>
-            <q-td key="tipodocumento" :props="props" style="display: grid;text-align: left;height: 51px;">
+            <q-td v-if="co_rol !== '2'"  key="tipodocumento" :props="props" style="display: grid;text-align: left;height: 51px;">
               <span style="font-weight: bolder;">{{ props.row.tipodocumento }}</span>
               <span style="font-style: italic;">N°: {{ props.row.numerodocumento }}</span>
+            </q-td>
+            <q-td v-if="co_rol === '2'"  key="tipodocumento" :props="props">
+              {{ props.row.tipodocumento }}
+            </q-td>
+            <q-td v-if="co_rol === '2'"  key="numerodocumento" :props="props">
+              <span style="font-weight: bolder;">{{ props.row.numerodocumento }}</span>
             </q-td>
             <q-td key="fecha" :props="props">
               {{ props.row.fecha }}
@@ -222,11 +229,11 @@
                 @click="openDetail(props.row)" />
             </q-td>
             <q-td key="exportar" :props="props">
-              <q-btn
+              <!-- <q-btn
                 color="negative"
                 label="PDF"
                 style="    margin-right: 10px;"
-                @click="openDetail(props.row)" />
+                @click="exportToPDF" />-->
               <q-btn
                 color="info"
                 label="XML"
@@ -234,9 +241,45 @@
             </q-td>
           </q-tr>
         </template>
+        <template v-slot:bottom-row>
+          <q-tr>
+            <q-td :colspan="co_rol === '2' ? '6' : '7'" class="totales">
+              Totales
+            </q-td>
+            <q-td style="text-align: right;"  class="totales">
+              {{totalbaseg}}
+            </q-td>
+            <q-td style="text-align: right;" class="totales">
+              {{totalimpuestog}}
+            </q-td>
+            <q-td  class="totales">
+            </q-td>
+            <q-td style="text-align: right;" class="totales">
+              {{totalbaser}}
+            </q-td>
+            <q-td style="text-align: right;" class="totales">
+              {{totalimpuestor}}
+            </q-td>
+            <q-td  class="totales">
+            </q-td>
+            <q-td style="text-align: right;" class="totales">
+              {{totalbaseigtf}}
+            </q-td>
+            <q-td style="text-align: right;" class="totales">
+              {{totalimpuestoigtf}}
+            </q-td>
+            <q-td  class="totales">
+            </q-td>
+            <q-td  class="totales">
+            </q-td>
+            <q-td  class="totales">
+            </q-td>
+          </q-tr>
+        </template>
       </q-table>
       <q-dialog v-model="viewdetail" persistent>
         <q-card style="max-width: inherit; width: auto">
+          <div id="detailid">
           <q-item>
             <q-item-section avatar>
               <q-avatar>
@@ -270,10 +313,10 @@
               <table style="width: 625px;">
                 <tr>
                   <td style="width: 390px;">
-                    Razón social: {{registro.nombreclientedetail}}  RIF: {{registro.cedulaclientedetail}}
+                    Razón&nbsp;social:&nbsp;{{registro.nombreclientedetail}}&nbsp; RIF:&nbsp;{{registro.cedulaclientedetail}}
                   </td>
                   <td>
-                    N° DE CONTROL: <span style="font-size: 18px;color: #e00303;font-weight: bolder;">{{registro.numerodocumento}}</span>
+                    N° DE CONTROL&nbsp;:&nbsp;<span style="font-size: 18px;color: #e00303;font-weight: bolder;"> {{registro.numerodocumento}}</span>
                   </td>
                 </tr>
                 <tr>
@@ -321,12 +364,107 @@
               <q-item-label caption>{{registro.totaldetail}}</q-item-label>
             </q-item-section>
           </q-item>
+        </div>
           <q-separator spaced inset="item" />
           <q-card-actions align="right">
+            <q-btn
+                color="info"
+                label="PDF"
+                style="margin-right: 10px;"
+                @click="exportDetailToPDF" />
             <q-btn label="Cerrar" color="negative" v-close-popup/>
           </q-card-actions>
         </q-card>
       </q-dialog>
+      <!-- CARD DE PDF DETAIL
+      <q-card style="max-width: inherit; width: auto; display: none;">
+          <div id="">
+          <q-item>
+            <q-item-section avatar>
+              <q-avatar>
+                <img :src="registro.logo" onerror="this.src='default.svg'">
+              </q-avatar>
+            </q-item-section>
+
+            <q-item-section>
+              <table>
+                <tr>
+                  <td style="width: 333px;">
+                    {{registro.razonsocialdetail}}
+                  </td>
+                  <td>
+                    RIF Nuevo: {{registro.rifdetail}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                   {{registro.direcciondetail}}
+                  </td>
+                  <td>
+                   {{registro.tipodocumentodetail}}
+                  </td>
+                </tr>
+              </table>
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section>
+              <table style="width: 625px;">
+                <tr>
+                  <td style="width: 390px;">
+                    Razón&nbsp;social:&nbsp;{{registro.nombreclientedetail}}&nbsp; RIF:&nbsp;{{registro.cedulaclientedetail}}
+                  </td>
+                  <td>
+                    N° DE CONTROL&nbsp;:&nbsp;<span style="font-size: 18px;color: #e00303;font-weight: bolder;"> {{registro.numerodocumento}}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Dirección: {{registro.direccionclientedetail}} Caracas
+                  </td>
+                  <td>
+                   Fecha de Emisión: {{registro.fechadetail}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Teléfono: {{registro.telefonoclientedetail}} 04125558877
+                  </td>
+                  <td>
+                    Hora de Emisión: {{registro.horadetail}}
+                  </td>
+                </tr>
+              </table>
+            </q-item-section>
+          </q-item>
+          <q-separator />
+
+          <q-item style="width: 65%;">
+
+            <q-item-section>
+              <q-item-label>Base imponible Bs. Gravable 16%:</q-item-label>
+              <q-item-label>Base imponible Bs. Gravable 8%:</q-item-label>
+              <q-item-label>Base imponible Bs. Exento 0%:</q-item-label>
+              <q-item-label>Base imponible Bs. IGTF 3%:</q-item-label>
+              <q-item-label>IVA 16%%:</q-item-label>
+              <q-item-label>IVA Reducido 8%:</q-item-label>
+              <q-item-label>IGTF 3%:</q-item-label>
+              <q-item-label>Total:</q-item-label>
+            </q-item-section>
+
+            <q-item-section side top>
+              <q-item-label caption>{{registro.basegdetail}}</q-item-label>
+              <q-item-label caption>{{registro.baserdetail}}</q-item-label>
+              <q-item-label caption>{{registro.exentodetail}}</q-item-label>
+              <q-item-label caption>{{registro.baseigtfdetail}}</q-item-label>
+              <q-item-label caption>{{registro.impuestogdetail}}</q-item-label>
+              <q-item-label caption>{{registro.impuestordetail}}</q-item-label>
+              <q-item-label caption>{{registro.impuestoigtfdetail}}</q-item-label>
+              <q-item-label caption>{{registro.totaldetail}}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </div>
+       </q-card>-->
     </div>
   </div>
 </template>
@@ -336,7 +474,6 @@ import { ref } from 'vue'
 import { exportFile, Notify } from 'quasar'
 import axios from 'axios'
 import moment from 'moment'
-
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 const config = require('../config/endpoints.js')
@@ -363,6 +500,13 @@ function wrapCsvValue (val, formatFn, row) {
 export default {
   setup () {
     return {
+      term: ref(''),
+      totalbaseg: ref('0,00'),
+      totalbaser: ref('0,00'),
+      totalbaseigtf: ref('0,00'),
+      totalimpuestog: ref('0,00'),
+      totalimpuestor: ref('0,00'),
+      totalimpuestoigtf: ref('0,00'),
       disabledSede: ref(false),
       viewdetail: ref(false),
       idserviciosmasivo: ref(undefined),
@@ -416,8 +560,8 @@ export default {
         { name: 'exportar', label: 'Exportar', align: 'center' }
       ],
       columns2: [
-        { name: 'trackingid', align: 'left', label: 'Referencia ID', field: 'trackingid', sortable: true },
-        { name: 'tipodocumento', align: 'left', label: 'Documento', sortable: true },
+        { name: 'tipodocumento', align: 'left', label: 'Documento', field: 'tipodocumento', sortable: true },
+        { name: 'numerodocumento', align: 'left', label: 'Número de Control', field: 'numerodocumento', sortable: true },
         { name: 'fecha', align: 'left', label: 'Fecha', field: 'fecha' },
         { name: 'nombrecliente', align: 'left', label: 'Nombre Cliente', field: 'nombrecliente' },
         { name: 'exento', label: 'Exento', field: 'exento' },
@@ -456,12 +600,26 @@ export default {
       exentodetail: '',
       baseigtfdetail: '',
       registro: {},
+      idusuario: sessionStorage.getItem('id_usuario'),
       co_sede_seleted: sessionStorage.getItem('co_sede_seleted'),
       tx_sede_seleted: sessionStorage.getItem('tx_sede_seleted'),
       rif_sede_seleted: sessionStorage.getItem('rif_sede_seleted')
     }
   },
   methods: {
+    exportDetailToPDF () {
+      // eslint-disable-next-line new-cap
+      const doc = new jsPDF('l', 'pt', 'a4')
+      console.log(document.getElementById('detailid'))
+      doc.html(document.getElementById('detailid'), {
+        callback: function (doc) {
+          doc.save('impredigitalDetalle.pdf')
+        },
+        x: 60,
+        y: 60
+
+      })
+    },
     JSONtoXML (obj) {
       let xml = ''
       for (const prop in obj) {
@@ -562,7 +720,7 @@ export default {
         margin: { top: 60 }
       })
       addFooters(doc)
-      doc.save('impredigital.pdf')
+      doc.save('impredigitalRegistros.pdf')
     },
     exportXMLDetail (reg) {
       this.rowtempxml.push(this.detailXML(reg))
@@ -598,6 +756,20 @@ export default {
 
       this.registro.totaldetail = Number(reg.impuestogN) + Number(reg.impuestorN) + Number(reg.impuestoigtfN)
       this.registro.totaldetail = this.completarDecimales(this.registro.totaldetail)
+    },
+    searchCliente (val, update, abort) {
+      if (val.length < 3) {
+        abort()
+        return
+      }
+      update(() => {
+        if (val === '') {
+          this.optionscliente = this.clientes
+        } else {
+          const needle = val.toLowerCase()
+          this.optionscliente = this.clientes.filter(v => v.namerif.toLowerCase().indexOf(needle) > -1)
+        }
+      })
     },
     searchEmisor (val, update, abort) {
       if (val.length < 3) {
@@ -638,6 +810,10 @@ export default {
       }
       this.listarfacturas()
     },
+    changeCliente () {
+      this.cedulacliente = this.modelcliente?.rif
+      this.listarfacturas()
+    },
     changeSede () {
       this.disable = true
       this.numerodocumento = ''
@@ -649,10 +825,10 @@ export default {
       this.listarfacturas()
     },
     changeTipo () {
-      this.disable = true
+      // this.disable = true
       this.idtipodocumento = this.modeltipo.cod
       this.tipodocumento = this.modeltipo.name
-      this.numerodocumento = ''
+      // this.numerodocumento = ''
       this.listarfacturas()
     },
     listartipos () {
@@ -689,7 +865,7 @@ export default {
           }
         }
         this.emisores = this.optionssede
-        this.rifs = this.optionssede
+        // this.rifs = this.optionssede
       }).catch(error => {
         Notify.create('Problemas al listar Sedes ' + error)
       })
@@ -763,6 +939,7 @@ export default {
       const body = {
         idserviciosmasivo: this.modelsede?.cod ? this.modelsede.cod : this.co_rol === '3' ? this.co_sede : undefined,
         idtipodocumento: this.modeltipo?.cod,
+        cedulacliente: this.modelcliente?.rif,
         numerodocumento: this.numerodocumento.length > 0 ? this.numerodocumento : undefined,
         desde: desde,
         hasta: hasta,
@@ -772,11 +949,29 @@ export default {
         impuestoigtf: this.impuestoigtf,
         estatus: 1
       }
+      if (this.numerodocumento.length > 0) {
+        const tipodoc = this.modeltipo.name ? this.modeltipo.name + ' ' : ''
+        const cliente = 'del cliente emisor ' + this.modelsede.name
+        axios.post(ENDPOINT_PATH_V2 + 'bitacora', {
+          idusuario: this.idusuario,
+          accion: 'CONSULTA',
+          ip: this.term,
+          observacion: 'Consultó documento ' + tipodoc + 'N° ' + this.numerodocumento + ' ' + cliente + ', en el módulo de reportes',
+          fecha: moment().format('YYYY-MM-DD HH:mm:ss')
+        })
+      }
       this.loading = true
       axios.post(ENDPOINT_PATH_V2 + 'reporte/facturas', body).then(async response => {
         const datos = response.data.data
         this.rows = []
         this.tempxml = []
+        this.clientes = []
+        this.totalbaseg = 0
+        this.totalbaser = 0
+        this.totalbaseigtf = 0
+        this.totalimpuestog = 0
+        this.totalimpuestor = 0
+        this.totalimpuestoigtf = 0
         for (const i in datos) {
           const obj = {}
           obj.cod = datos[i].id
@@ -812,10 +1007,18 @@ export default {
           obj.basegN = datos[i].baseg || 0
           obj.impuestogN = datos[i].impuestog || 0
           obj.baser = datos[i].baser || 0
+          obj.baserN = datos[i].baser || 0
           obj.impuestorN = datos[i].impuestor || 0
           obj.baseigtf = datos[i].baseigtf || 0
           obj.baseigtfN = datos[i].baseigtf || 0
           obj.impuestoigtfN = datos[i].impuestoigtf || 0
+
+          this.totalbaseg += Number(obj.basegN)
+          this.totalbaser += Number(obj.baserN)
+          this.totalbaseigtf += Number(obj.baseigtfN)
+          this.totalimpuestog += Number(obj.impuestogN)
+          this.totalimpuestor += Number(obj.impuestorN)
+          this.totalimpuestoigtf += Number(obj.impuestoigtfN)
 
           datos[i].totalxml = Number(obj.exentoN) + Number(obj.basegN) + Number(obj.impuestogN)
           datos[i].grandtotalxml = Number(datos[i].totalxml) + Number(obj.baseigtfN) + Number(obj.impuestoigtfN)
@@ -831,7 +1034,16 @@ export default {
           obj.impuestoigtf = this.completarDecimales(obj.impuestoigtfN)
           this.rows.push(obj)
           this.tempxml.push(this.detailXML(datos[i]))
+          this.crearClientes(obj)
         }
+        this.totalbaseg = this.completarDecimales(this.totalbaseg)
+        this.totalbaser = this.completarDecimales(this.totalbaser)
+        this.totalbaseigtf = this.completarDecimales(this.totalbaseigtf)
+
+        this.totalimpuestog = this.completarDecimales(this.totalimpuestog)
+        this.totalimpuestor = this.completarDecimales(this.totalimpuestor)
+        this.totalimpuestoigtf = this.completarDecimales(this.totalimpuestoigtf)
+
         this.loading = false
       }).catch(error => {
         Notify.create('Problemas al listar Reporte ' + error)
@@ -880,6 +1092,15 @@ export default {
       const arreglo = cadena.split(',')
       cadena = arreglo.length === 1 ? cadena + ',00' : arreglo[1].length === 1 ? cadena + '0' : cadena
       return cadena
+    },
+    crearClientes (row) {
+      const obj = {}
+      const namerif = row.cedulacliente + ' ' + row.nombrecliente
+      if (this.clientes.findIndex(item => item.namerif === namerif) === -1) {
+        obj.rif = row.cedulacliente
+        obj.namerif = namerif
+        this.clientes.push(obj)
+      }
     }
   },
   watch: {
@@ -893,6 +1114,9 @@ export default {
     }
   },
   mounted () {
+    fetch('https://api.ipify.org?format=json').then(x => x.json()).then(({ ip }) => {
+      this.term = ip
+    })
     console.log('Mounted')
     console.log(this.tx_sede_seleted)
     if (this.co_sede_seleted) {
@@ -926,11 +1150,15 @@ export default {
   .text-caption {
       font-size: inherit;
   }
+  .totales{
+    font-weight: bolder;
+    color: blue;
+  }
 </style>
 <style lang="sass">
 .my-sticky-header-table
   /* height or max-height is important */
-  height: 650px
+  min-height: 70vh
 
   .q-table__top,
   .q-table__bottom,

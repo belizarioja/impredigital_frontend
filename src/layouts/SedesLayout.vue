@@ -1,39 +1,7 @@
 <template>
  <div class="bg-primary window-height window-width row justify-center">
 
-  <!--<q-card
-    no-body
-    class="text-center justify-content-center h-100"
-    style="max-width: 600px;min-width: 600px;margin: 0px auto;">
-    <q-card-section>
-        <br><p style="margin: 0;">SELECCIONE CLIENTE EMISOR</p>
-    </q-card-section>
-    <q-separator />
-    <q-card-section style="display: flex; justify-content: space-evenly;">
-      <div
-        v-for="(item, index) in rows"
-        :key="index"
-        class="iconSede sedeNoSelected "
-        :class="{[`class${index}`]: true}"
-        @click="onSeleted(index)">
-         <div class="imgSede">
-           <img v-bind:src="item.logo" onerror="this.src='default.svg'" v-bind:width="item.width"/>
-         </div>
-         <span class="nombreSede">{{ item.rif }}</span>
-         <span class="direccionSede">{{ item.razonsocial }}</span>
-       </div>
-    </q-card-section>
-    <q-separator />
-    <q-card-section>
-      <q-btn
-        label="Continuar"
-        v-close-popup color="secondary"
-        style=""
-        :disabled="isDisabled"
-        @click="volver()"/>
-    </q-card-section>
-  </q-card> -->
-  <q-card style="width: 600px; overflow: auto; height: 730px; margin-top: 40px;">
+  <q-card style="margin-top: 30px; height: fit-content;width: 600px">
       <q-card-section class="" style="background: darkslategray;">
         <div class="text-h6 text-white">
           Seleccione cliente emisor
@@ -41,7 +9,7 @@
       </q-card-section>
         <div
           class="row"
-          style="justify-content: center;height: 600px; overflow: scroll;"
+          style="justify-content: center;height: 380px; overflow: scroll;"
         >
           <div
             v-for="(item, index) in rows"
@@ -158,7 +126,7 @@ export default {
           const obj = {}
           obj.cod = datos[i].id
           obj.logo = ENDPOINT_PATH_V2 + 'imagen/' + datos[i].rif + '.png'
-          obj.width = 100
+          obj.width = 80
           obj.rif = datos[i].rif
           obj.razonsocial = datos[i].razonsocial
           obj.direccion = datos[i].direccion
@@ -189,7 +157,7 @@ export default {
   .iconPaquete {
     text-align: center;
     width: 150px;
-    height: 185px;
+    height: 160px;
     border-radius: 10px;
     margin: 9px;
     padding: 5px;

@@ -56,7 +56,7 @@
             <div style="font-size: x-small;">Estadisticas, reportes.</div>
           </q-item-section>
         </q-item>
-        <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="usuarios">
+        <q-item v-if="co_rol === '1'" clickable v-ripple @click="usuarios">
           <q-item-section avatar>
             <q-icon color="black" name="manage_accounts" />
           </q-item-section>

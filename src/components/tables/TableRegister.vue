@@ -24,16 +24,22 @@
         </template>
         <template v-slot:body="props">
           <q-tr :props="props">
-            <q-td v-if="co_rol !== '2'" key="rif" :props="props" style="display: grid;text-align: left;height: 51px;">
-              <span style="font-weight: bolder; width: 180px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.razonsocial }}</span>
+            <q-td v-if="co_rol !== '2'" key="rif" :props="props" style="display: grid;text-align:left;height: 51px;">
+              <span style="font-weight: bolder; width: 200px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.razonsocial }}</span>
               <span style="font-style: italic;">RIF: {{ props.row.rif }}</span>
             </q-td>
-            <q-td key="trackingid" :props="props">
+            <q-td v-if="co_rol !== '2'"  key="trackingid" :props="props">
               {{ props.row.trackingid }}
             </q-td>
-            <q-td key="tipodocumento" :props="props" style="display: grid;text-align: left;height: 51px;">
-              <span style="font-weight: bolder; width: 160px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.tipodocumento }}</span>
+            <q-td v-if="co_rol !== '2'"  key="tipodocumento" :props="props" style="display: grid;text-align: left;height: 51px;">
+              <span style="font-weight: bolder;">{{ props.row.tipodocumento }}</span>
               <span style="font-style: italic;">N°: {{ props.row.numerodocumento }}</span>
+            </q-td>
+            <q-td v-if="co_rol === '2'"  key="tipodocumento" :props="props">
+              {{ props.row.tipodocumento }}
+            </q-td>
+            <q-td v-if="co_rol === '2'"  key="numerodocumento" :props="props">
+              <span style="font-weight: bolder;">{{ props.row.numerodocumento }}</span>
             </q-td>
             <q-td key="fecha" :props="props">
               <span style="width: 180px;">{{ props.row.fecha }}</span>
@@ -66,11 +72,11 @@
                 @click="openDetail(props.row)" />
             </q-td>
             <q-td key="exportar" :props="props">
-              <q-btn
+              <!-- <q-btn
                 color="negative"
                 label="PDF"
                 style="    margin-right: 10px;"
-                @click="openDetail(props.row)" />
+                @click="openDetail(props.row)" /> -->
               <q-btn
                 color="info"
                 label="XML"
@@ -78,9 +84,32 @@
             </q-td>
           </q-tr>
         </template>
+        <template v-slot:bottom-row>
+          <q-tr>
+            <q-td :colspan="co_rol === '2' ? '4' : '5'" class="totales">
+              Totales
+            </q-td>
+            <q-td style="text-align: right;"  class="totales">
+              {{totalimpuestog}}
+            </q-td>
+            <q-td style="text-align: right;" class="totales">
+              {{totalimpuestor}}
+            </q-td>
+            <q-td style="text-align: right;" class="totales">
+              {{totalimpuestoigtf}}
+            </q-td>
+            <q-td  class="totales">
+            </q-td>
+            <q-td  class="totales">
+            </q-td>
+            <q-td  class="totales">
+            </q-td>
+          </q-tr>
+        </template>
       </q-table>
       <q-dialog v-model="viewdetail" persistent>
         <q-card style="max-width: inherit; width: auto">
+          <div id="detailid">
           <q-item>
             <q-item-section avatar>
               <q-avatar>
@@ -165,8 +194,14 @@
               <q-item-label caption>{{registro.totaldetail}}</q-item-label>
             </q-item-section>
           </q-item>
+          </div>
           <q-separator spaced inset="item" />
           <q-card-actions align="right">
+            <q-btn
+                color="info"
+                label="PDF"
+                style="margin-right: 10px;"
+                @click="exportDetailToPDF" />
             <q-btn label="Cerrar" color="negative" v-close-popup/>
           </q-card-actions>
         </q-card>
@@ -210,6 +245,12 @@ export default defineComponent({
 
   setup () {
     return {
+      totalbaseg: ref('0,00'),
+      totalbaser: ref('0,00'),
+      totalbaseigtf: ref('0,00'),
+      totalimpuestog: ref('0,00'),
+      totalimpuestor: ref('0,00'),
+      totalimpuestoigtf: ref('0,00'),
       loading: ref(false),
       viewdetail: ref(false),
       dateHoy: moment().format('DD/MM/YYYY'),
@@ -225,7 +266,7 @@ export default defineComponent({
     return {
       visibleColumns: this.co_rol !== '2'
         ? ['rif', 'trackingid', 'tipodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar']
-        : ['trackingid', 'tipodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar'],
+        : ['tipodocumento', 'numerodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar'],
       columns: [
         {
           name: 'rif',
@@ -236,7 +277,8 @@ export default defineComponent({
           sortable: true
         },
         { name: 'trackingid', align: 'left', label: 'Referencia', field: 'trackingid', sortable: true },
-        { name: 'tipodocumento', align: 'left', label: 'Documento N° de control' },
+        { name: 'tipodocumento', align: 'left', label: 'Documento' },
+        { name: 'numerodocumento', align: 'left', label: 'N° de control' },
         { name: 'fecha', align: 'left', label: 'Fecha', field: 'fecha' },
         { name: 'nombrecliente', align: 'left', label: 'Nombre Cliente' },
         { name: 'iva', label: 'IVA' },
@@ -253,6 +295,19 @@ export default defineComponent({
     }
   },
   methods: {
+    exportDetailToPDF () {
+      // eslint-disable-next-line new-cap
+      const doc = new jsPDF('l', 'pt', 'a4')
+      console.log(document.getElementById('detailid'))
+      doc.html(document.getElementById('detailid'), {
+        callback: function (doc) {
+          doc.save('impredigitalDetalle.pdf')
+        },
+        x: 60,
+        y: 60
+
+      })
+    },
     JSONtoXML (obj) {
       let xml = ''
       for (const prop in obj) {
@@ -431,6 +486,12 @@ export default defineComponent({
         // console.log(response.data)
         const datos = response.data.data
         this.rows = []
+        this.totalbaseg = 0
+        this.totalbaser = 0
+        this.totalbaseigtf = 0
+        this.totalimpuestog = 0
+        this.totalimpuestor = 0
+        this.totalimpuestoigtf = 0
         for (const i in datos) {
           // console.log(datos[i])
           const obj = {}
@@ -469,10 +530,18 @@ export default defineComponent({
           obj.basegN = datos[i].baseg || 0
           obj.impuestogN = datos[i].impuestog || 0
           obj.baser = datos[i].baser || 0
+          obj.baserN = datos[i].baser || 0
           obj.impuestorN = datos[i].impuestor || 0
           obj.baseigtf = datos[i].baseigtf || 0
           obj.baseigtfN = datos[i].baseigtf || 0
           obj.impuestoigtfN = datos[i].impuestoigtf || 0
+
+          this.totalbaseg += Number(obj.basegN)
+          this.totalbaser += Number(obj.baserN)
+          this.totalbaseigtf += Number(obj.baseigtfN)
+          this.totalimpuestog += Number(obj.impuestogN)
+          this.totalimpuestor += Number(obj.impuestorN)
+          this.totalimpuestoigtf += Number(obj.impuestoigtfN)
 
           datos[i].totalxml = Number(obj.exentoN) + Number(obj.basegN) + Number(obj.impuestogN)
           datos[i].grandtotalxml = Number(datos[i].totalxml) + Number(obj.baseigtfN) + Number(obj.impuestoigtfN)
@@ -490,6 +559,14 @@ export default defineComponent({
           this.tempxml.push(this.detailXML(datos[i]))
         }
         this.loading = false
+
+        this.totalbaseg = this.completarDecimales(this.totalbaseg)
+        this.totalbaser = this.completarDecimales(this.totalbaser)
+        this.totalbaseigtf = this.completarDecimales(this.totalbaseigtf)
+
+        this.totalimpuestog = this.completarDecimales(this.totalimpuestog)
+        this.totalimpuestor = this.completarDecimales(this.totalimpuestor)
+        this.totalimpuestoigtf = this.completarDecimales(this.totalimpuestoigtf)
       }).catch(error => {
         Notify.create('Problemas al listar Facturas ' + error)
       })
@@ -600,5 +677,9 @@ export default defineComponent({
 <style>
   .text-caption {
       font-size: inherit;
+  }
+  .totales{
+    font-weight: bolder;
+    color: blue;
   }
 </style>
