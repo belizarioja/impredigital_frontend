@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+   <q-layout view="hHh Lpr lff" container style="min-height: 100vh;" class="shadow-2 rounded-borders">
     <q-header elevated>
       <q-toolbar>
         <q-btn
@@ -8,7 +8,7 @@
           round
           icon="menu"
           aria-label="Menu"
-          @click="toggleLeftDrawer"
+          @click="drawer = !drawer"
         />
 
         <q-toolbar-title style="display: grid;">
@@ -27,105 +27,115 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
-      <q-list>
-        <q-item-label
-          header
-          style="display: grid;justify-content: center;align-items: center;background: #1976d2;"
-        >
-          <img v-if="co_rol === '3'" :src="logo_sede" onerror="this.src='logo_impredigital.jpg'" width="200" />
-          <img v-if="co_rol === '1'" src="logo_impredigital.jpg" width="200" />
-          <img v-if="co_rol === '2'" src="logo_seniat.png" width="200" />
-        </q-item-label>
+      <q-drawer
+        v-model="drawer"
+        show-if-above
 
-        <!-- <EssentialLink
-          v-for="link in essentialLinks"
-          :key="link.title"
-          v-bind="link"
-        /> -->
-        <q-item clickable v-ripple @click="listado">
-          <q-item-section avatar>
-            <q-icon color="black" name="dashboard" />
-          </q-item-section>
-          <q-item-section>
-            <div>Indicadores principales</div>
-            <div style="font-size: x-small;">Estadisticas, reportes.</div>
-          </q-item-section>
-        </q-item>
-        <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="usuarios">
-          <q-item-section avatar>
-            <q-icon color="black" name="manage_accounts" />
-          </q-item-section>
-          <q-item-section>
-            <div>Usuarios</div>
-            <div style="font-size: x-small;">Gestión de usuarios del sistema</div>
-          </q-item-section>
-        </q-item>
-        <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="sedes">
-          <q-item-section avatar>
-            <q-icon color="black" name="store" />
-          </q-item-section>
-          <q-item-section>
-            <div>Cliente emisor</div>
-            <div style="font-size: x-small;">Negocio, sucursal, contribuyentes</div>
-          </q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="reportes">
-          <q-item-section avatar>
-            <q-icon color="black" name="summarize" />
-          </q-item-section>
-          <q-item-section>
-            <div>Reportes</div>
-            <div style="font-size: x-small;">Reportes, exportar</div>
-          </q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="anulaciones">
-          <q-item-section avatar>
-            <q-icon color="black" name="bookmark_remove" />
-          </q-item-section>
-          <q-item-section>
-            <div>Anulaciones</div>
-            <div style="font-size: x-small;">Anulaciones, correcciones</div>
-          </q-item-section>
-        </q-item>
-         <q-item v-if="co_rol === '1'" clickable v-ripple @click="simulador">
-          <q-item-section avatar>
-            <q-icon color="black" name="print" />
-          </q-item-section>
-          <q-item-section>
-            <div>Simulador Facturación</div>
-            <div style="font-size: x-small;">Facturas, notas de entrega, etc.</div>
-          </q-item-section>
-        </q-item>
-         <q-item v-if="co_rol === '1'" clickable v-ripple @click="simulador2">
-          <q-item-section avatar>
-            <q-icon color="black" name="print" />
-          </q-item-section>
-          <q-item-section>
-            <div>Simulador Anulación</div>
-            <div style="font-size: x-small;">Simular anulaciones.</div>
-          </q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="salir">
-          <q-item-section avatar>
-            <q-icon color="black" name="logout" />
-          </q-item-section>
-          <q-item-section>
-            <div>Salir</div>
-            <div style="font-size: x-small;">Cerrar sesión</div>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-drawer>
+        :mini="miniState"
+        @mouseover="miniState = false"
+        @mouseout="miniState = true"
 
-    <q-page-container>
-      <router-view />
-    </q-page-container>
-  </q-layout>
+        :width="230"
+        :breakpoint="500"
+        bordered
+        class="bg-grey-3"
+      >
+        <q-scroll-area class="fit" :horizontal-thumb-style="{ opacity: 0 }">
+          <q-list padding>
+            <!-- <EssentialLink
+              v-for="link in essentialLinks"
+              :key="link.title"
+              v-bind="link"
+            /> -->
+            <q-item clickable v-ripple @click="listado" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="dashboard" />
+              </q-item-section>
+              <q-item-section>
+                <div>Indicadores principales</div>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="usuarios" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="manage_accounts" />
+              </q-item-section>
+              <q-item-section>
+                <div>Usuarios</div>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="sedes" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="store" />
+              </q-item-section>
+              <q-item-section>
+                <div>Cliente emisor</div>
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="reportes" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="summarize" />
+              </q-item-section>
+              <q-item-section>
+                <div>Reportes</div>
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="anulaciones" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="bookmark_remove" />
+              </q-item-section>
+              <q-item-section>
+                <div>Anulaciones</div>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="auditorias" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="policy" />
+              </q-item-section>
+              <q-item-section>
+                <div>Auditoría</div>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="co_rol === '1'" clickable v-ripple @click="simulador" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="print" />
+              </q-item-section>
+              <q-item-section>
+                <div>Simulador Facturación</div>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="co_rol === '1'" clickable v-ripple @click="simulador2" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="print" />
+              </q-item-section>
+              <q-item-section>
+                <div>Simulador Anulación</div>
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="salir" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="logout" />
+              </q-item-section>
+              <q-item-section>
+                <div>Salir</div>
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listado">
+              <q-item-section avatar>
+              </q-item-section>
+              <q-item-section>
+                <img v-if="co_rol === '3'" :src="logo_sede" onerror="this.src='logo_impredigital.png'" width="110" />
+                <img v-if="co_rol === '1'" src="logo_impredigital.png" width="110" />
+                <img v-if="co_rol === '2'" src="logo_seniat.png" width="110" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-scroll-area>
+      </q-drawer>
+
+      <q-page-container>
+        <router-view />
+      </q-page-container>
+    </q-layout>
 </template>
 
 <script>
@@ -136,6 +146,12 @@ const ENDPOINT_PATH_V2 = config.endpoint_path_v2
 
 export default defineComponent({
   name: 'MainLayout',
+  setup () {
+    return {
+      drawer: ref(false),
+      miniState: ref(true)
+    }
+  },
   data () {
     return {
       co_sede_seleted: sessionStorage.getItem('co_sede_seleted'),
@@ -147,22 +163,15 @@ export default defineComponent({
       tx_sede: sessionStorage.getItem('tx_sede')
     }
   },
-  setup () {
-    const leftDrawerOpen = ref(false)
-
-    return {
-      leftDrawerOpen,
-      toggleLeftDrawer () {
-        leftDrawerOpen.value = !leftDrawerOpen.value
-      }
-    }
-  },
   methods: {
     listado () {
       this.$router.push('/dashboard')
     },
     sedes () {
       this.$router.push('/sedes')
+    },
+    auditorias () {
+      this.$router.push('/auditorias')
     },
     sedeschange () {
       sessionStorage.removeItem('co_sede_seleted')

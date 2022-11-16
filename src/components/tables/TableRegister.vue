@@ -252,10 +252,12 @@ export default defineComponent({
       totalimpuestor: ref('0,00'),
       totalimpuestoigtf: ref('0,00'),
       loading: ref(false),
+      term: ref(''),
       viewdetail: ref(false),
       dateHoy: moment().format('DD/MM/YYYY'),
       tx_nombre: sessionStorage.getItem('tx_nombre'),
       co_rol: sessionStorage.getItem('co_rol'),
+      idusuario: sessionStorage.getItem('id_usuario'),
       initialPagination: {
         page: 1,
         rowsPerPage: 10 // 0 means all rows
@@ -374,6 +376,7 @@ export default defineComponent({
     },
     exportPDF () {
       const vm = this
+      this.crearbitacora(vm.dateFrom, vm.dateTo, 6)
       const columns = [
         { title: 'Emisor', dataKey: 'razonsocial' },
         { title: 'Rif', dataKey: 'rif' },
@@ -473,6 +476,22 @@ export default defineComponent({
         Notify.create('Problemas al Buscar factura ' + error)
       })
     },
+    crearbitacora (desde, hasta, idevento) {
+      let observacion = ''
+      const fechas = ' desde el ' + desde + ' hasta el ' + hasta
+      const tipodoc = this.idtipodochijo ? ', ' + this.tipodochijo : ''
+      observacion += tipodoc
+      const cliente = this.idserviciohijo ? ', cliente emisor ' + this.serviciohijo : ''
+      observacion += cliente
+      observacion += fechas
+      axios.post(ENDPOINT_PATH_V2 + 'bitacora', {
+        idusuario: this.idusuario,
+        idevento: idevento,
+        ip: this.term,
+        observacion: observacion,
+        fecha: moment().format('YYYY-MM-DD HH:mm:ss')
+      })
+    },
     listarfacturas () {
       const body = {
         idtipodocumento: this.idtipodochijo || undefined,
@@ -481,6 +500,7 @@ export default defineComponent({
         hasta: moment(this.dateTo, 'YYYY/MM/DD').format('YYYY-MM-DD'),
         estatus: 1
       }
+      this.crearbitacora(moment(this.dateFrom, 'YYYY/MM/DD').format('YYYY-MM-DD'), moment(this.dateTo, 'YYYY/MM/DD').format('YYYY-MM-DD'), 2)
       this.loading = true
       axios.post(ENDPOINT_PATH_V2 + 'reporte/facturas', body).then(async response => {
         // console.log(response.data)
@@ -666,10 +686,13 @@ export default defineComponent({
     }
   },
   mounted () {
-    this.updateRegistros()
+    fetch('https://api.ipify.org?format=json').then(x => x.json()).then(({ ip }) => {
+      this.term = ip
+      this.updateRegistros()
     /* setInterval(() => {
       this.updateRegistros()
     }, 4000) */
+    })
   }
 })
 </script>

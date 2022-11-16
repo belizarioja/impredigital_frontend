@@ -27,16 +27,6 @@
         </q-td>
       </template>
     </q-table>
-    <q-table
-        dense
-        :rows="rowstodos"
-        title="Bitácora"
-        :columns="columnsdetails"
-        row-key="num"
-        :pagination="pagination"
-        style="width: 100%; margin-top: 40px;"
-      >
-    </q-table>
     <q-dialog v-model="modalcrear" persistent>
       <q-card style="min-width: 350px">
         <q-card-section>
@@ -170,22 +160,13 @@ export default {
       columnsdetails: [
         { name: 'num', align: 'center', label: '#', field: 'num' },
         { name: 'fecha', align: 'center', label: 'Fecha', field: 'fecha' },
-        {
-          name: 'accion',
-          required: true,
-          label: 'Acción',
-          align: 'left',
-          field: row => row.accion,
-          format: val => `${val}`,
-          sortable: true
-        },
+        { name: 'evento', align: 'center', label: 'Evento', field: 'evento' },
         { name: 'observacion', align: 'left', label: 'Observación', field: 'observacion' },
         { name: 'ip', align: 'center', label: 'IP', field: 'ip' },
         { name: 'idusuario', align: 'center', label: 'Id Usuario', field: 'idusuario' },
         { name: 'nombre', align: 'center', label: 'Nombre Usuario', field: 'nombre' }
       ],
       rowsdetails: [],
-      rowstodos: [],
       modelrol: [],
       optionsrol: [],
       modelsede: [],
@@ -204,7 +185,7 @@ export default {
         for (const i in datos) {
           const obj = {}
           obj.num = Number(i) + 1
-          obj.accion = datos[i].accion
+          obj.evento = datos[i].evento
           obj.idusuario = datos[i].idusuario
           obj.usuario = datos[i].usuario
           obj.nombre = datos[i].nombre
@@ -217,10 +198,7 @@ export default {
         console.log(row.id)
         if (row.id) {
           this.viewdetails = true
-        } else {
-          this.rowstodos = this.rowsdetails
         }
-        console.log(this.rowstodos)
       }).catch(error => {
         Notify.create('Problemas al listar Detalles bitacora ' + error)
       })
@@ -312,7 +290,6 @@ export default {
     this.listarusuarios()
     this.listarroles()
     this.listarsedes()
-    this.btnviewdetails({})
   }
 
 }

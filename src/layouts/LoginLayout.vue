@@ -68,7 +68,7 @@ export default {
           }).then(async response => {
             axios.post(ENDPOINT_PATH_V2 + 'bitacora', {
               idusuario: response.data.resp.id,
-              accion: 'ACCESO',
+              idevento: 1,
               ip: this.term,
               observacion: 'Acceso al sistema con éxito',
               fecha: moment().format('YYYY-MM-DD HH:mm:ss')

@@ -686,6 +686,7 @@ export default {
     },
     exportPDF () {
       const vm = this
+      this.crearbitacora(vm.dateFrom, vm.dateTo, 7)
       const columns = [
         { title: 'Emisor', dataKey: 'razonsocial' },
         { title: 'Rif', dataKey: 'rif' },
@@ -933,6 +934,31 @@ export default {
         Notify.create('Problemas al Buscar factura ' + error)
       })
     },
+    crearbitacora (desde, hasta, idevento) {
+      let observacion = ''
+      let fechas = ' desde el ' + desde + ' hasta el ' + hasta
+      const tipodoc = this.modeltipo.name ? ', ' + this.modeltipo.name : ''
+      observacion += tipodoc
+      const cliente = this.modelsede?.name ? ', cliente emisor ' + this.modelsede.namerif : ''
+      observacion += cliente
+      const tipoimpuesto = this.modelimpuesto.name ? ', tipo de impuesto ' + this.modelimpuesto.name : ''
+      observacion += tipoimpuesto
+      const clientefinal = this.modelcliente?.rif ? ', cliente consumidor ' + this.modelcliente.namerif : ''
+      observacion += clientefinal
+
+      if (this.numerodocumento.length > 0) {
+        fechas = ''
+        observacion += ', N° de control ' + this.numerodocumento
+      }
+      observacion += fechas
+      axios.post(ENDPOINT_PATH_V2 + 'bitacora', {
+        idusuario: this.idusuario,
+        idevento: idevento,
+        ip: this.term,
+        observacion: observacion,
+        fecha: moment().format('YYYY-MM-DD HH:mm:ss')
+      })
+    },
     listarfacturas () {
       const desde = this.numerodocumento.length > 0 ? undefined : moment(this.dateFrom, 'YYYY/MM/DD').format('YYYY-MM-DD')
       const hasta = this.numerodocumento.length > 0 ? undefined : moment(this.dateTo, 'YYYY/MM/DD').format('YYYY-MM-DD')
@@ -949,17 +975,7 @@ export default {
         impuestoigtf: this.impuestoigtf,
         estatus: 1
       }
-      if (this.numerodocumento.length > 0) {
-        const tipodoc = this.modeltipo.name ? this.modeltipo.name + ' ' : ''
-        const cliente = 'del cliente emisor ' + this.modelsede.name
-        axios.post(ENDPOINT_PATH_V2 + 'bitacora', {
-          idusuario: this.idusuario,
-          accion: 'CONSULTA',
-          ip: this.term,
-          observacion: 'Consultó documento ' + tipodoc + 'N° ' + this.numerodocumento + ' ' + cliente + ', en el módulo de reportes',
-          fecha: moment().format('YYYY-MM-DD HH:mm:ss')
-        })
-      }
+      this.crearbitacora(desde, hasta, 3)
       this.loading = true
       axios.post(ENDPOINT_PATH_V2 + 'reporte/facturas', body).then(async response => {
         const datos = response.data.data
@@ -1116,33 +1132,32 @@ export default {
   mounted () {
     fetch('https://api.ipify.org?format=json').then(x => x.json()).then(({ ip }) => {
       this.term = ip
-    })
-    console.log('Mounted')
-    console.log(this.tx_sede_seleted)
-    if (this.co_sede_seleted) {
-      const obj = {}
-      obj.cod = this.co_sede_seleted
-      obj.rif = this.rif_sede_seleted
-      obj.razonsocial = this.tx_sede_seleted
-      this.idserviciosmasivo = this.co_sede_seleted
-      obj.namerif = obj.razonsocial + ' ' + obj.rif
-      this.serviciosmasivo = obj.namerif
-      this.modelsede = obj
-      this.disabledSede = true
-      this.disable = false
-    }
-    console.log(this.co_rol)
-    if (this.co_rol === '3') {
-      this.disable = false
-    }
-    this.listarsedes()
-    this.listartipos()
-    this.listarfacturas()
-    /* setInterval(() => {
+      console.log('Mounted')
+      console.log(this.tx_sede_seleted)
+      if (this.co_sede_seleted) {
+        const obj = {}
+        obj.cod = this.co_sede_seleted
+        obj.rif = this.rif_sede_seleted
+        obj.razonsocial = this.tx_sede_seleted
+        this.idserviciosmasivo = this.co_sede_seleted
+        obj.namerif = obj.razonsocial + ' ' + obj.rif
+        this.serviciosmasivo = obj.namerif
+        this.modelsede = obj
+        this.disabledSede = true
+        this.disable = false
+      }
+      console.log(this.co_rol)
+      if (this.co_rol === '3') {
+        this.disable = false
+      }
+      this.listarsedes()
+      this.listartipos()
       this.listarfacturas()
-    }, 3000) */
+      /* setInterval(() => {
+        this.listarfacturas()
+      }, 3000) */
+    })
   }
-
 }
 </script>
 
