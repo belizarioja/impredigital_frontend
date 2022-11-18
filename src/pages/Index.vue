@@ -88,14 +88,13 @@
      />
     <q-card class="bg-transparent no-shadow no-border" style="width: auto;">
       <q-card-section class="row">
-        <div class="col-md-8 col-sm-7 col-xs-12">
+        <div :class="co_rol === '1' ? 'col-md-8 col-sm-7 col-xs-12' : 'col-12'">
           <line-chart/>
         </div>
-        <div class="col-md-4 col-sm-5 col-xs-12">
+        <div v-if="co_rol === '1'" class="col-md-4 col-sm-5 col-xs-12">
           <q-card class="bg-transparent no-shadow no-border" style="width: auto; margin-left: 8px;">
             <q-card-section class="q-pa-none">
               <table-top
-                v-if="co_rol === '1' || co_rol === '2'"
                 :changesede="changeSedeChild"
                 v-bind:idserviciohijo="idserviciosmasivo"
                 v-bind:dateFrom="dateFrom"

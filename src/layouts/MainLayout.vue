@@ -17,8 +17,9 @@
         </q-toolbar-title>
 
         <div style="display: flex;justify-content: center;align-items: center;">
+          <span v-if="co_sede_seleted && co_rol === '4'" style="font-size: 16px; margin-right: 20px;">{{tx_sede_seleted}}</span>
           <q-btn
-            v-if="co_rol === '1' || co_rol === '2'"
+            v-if="co_rol === '1' || co_rol === '2' || co_rol === '4'"
             color="info"
             icon="add_business"
             :label="co_sede_seleted ? 'Cambiar de Emisor' : 'Seleccionar Emisor'"
@@ -47,7 +48,7 @@
               :key="link.title"
               v-bind="link"
             /> -->
-            <q-item clickable v-ripple @click="listado" style="font-size: 12px;">
+            <q-item v-if="co_rol !== '4'" clickable v-ripple @click="listado" style="font-size: 12px;">
               <q-item-section avatar>
                 <q-icon color="black" name="dashboard" />
               </q-item-section>
@@ -119,13 +120,13 @@
                 <div>Salir</div>
               </q-item-section>
             </q-item>
-            <q-item clickable v-ripple @click="listado">
+            <q-item>
               <q-item-section avatar>
               </q-item-section>
               <q-item-section>
                 <img v-if="co_rol === '3'" :src="logo_sede" onerror="this.src='logo_impredigital.png'" width="110" />
                 <img v-if="co_rol === '1'" src="logo_impredigital.png" width="110" />
-                <img v-if="co_rol === '2'" src="logo_seniat.png" width="110" />
+                <img v-if="co_rol === '2' || co_rol === '4'" src="logo_seniat.png" width="110" />
               </q-item-section>
             </q-item>
           </q-list>
@@ -155,6 +156,7 @@ export default defineComponent({
   data () {
     return {
       co_sede_seleted: sessionStorage.getItem('co_sede_seleted'),
+      tx_sede_seleted: sessionStorage.getItem('tx_sede_seleted'),
       logo_sede: ENDPOINT_PATH_V2 + 'imagen/' + sessionStorage.getItem('rif_sede') + '.png',
       tx_usuario: sessionStorage.getItem('rol_name'),
       tx_nombre: sessionStorage.getItem('tx_nombre'),

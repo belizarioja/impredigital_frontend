@@ -149,9 +149,9 @@ export default {
           format: val => `${val}`,
           sortable: true
         },
-        { name: 'razonsocial', align: 'center', label: 'Razon Social', field: 'razonsocial', sortable: true },
-        { name: 'usuario', align: 'center', label: 'Usuario', field: 'usuario', sortable: true },
-        { name: 'clave', align: 'center', label: 'Clave', field: 'clave', sortable: true },
+        { name: 'razonsocial', align: 'left', label: 'Razon Social', field: 'razonsocial', sortable: true },
+        { name: 'usuario', align: 'left', label: 'Usuario', field: 'usuario', sortable: true },
+        // { name: 'clave', align: 'center', label: 'Clave', field: 'clave', sortable: true },
         { name: 'rol', label: 'Rol', field: 'rol', sortable: true },
         { name: 'bitacora', label: 'Bitácora' },
         { name: 'estatus', label: 'Estatus', field: 'estatus' }
@@ -160,11 +160,11 @@ export default {
       columnsdetails: [
         { name: 'num', align: 'center', label: '#', field: 'num' },
         { name: 'fecha', align: 'center', label: 'Fecha', field: 'fecha' },
-        { name: 'evento', align: 'center', label: 'Evento', field: 'evento' },
+        { name: 'evento', align: 'left', label: 'Evento', field: 'evento' },
         { name: 'observacion', align: 'left', label: 'Observación', field: 'observacion' },
         { name: 'ip', align: 'center', label: 'IP', field: 'ip' },
         { name: 'idusuario', align: 'center', label: 'Id Usuario', field: 'idusuario' },
-        { name: 'nombre', align: 'center', label: 'Nombre Usuario', field: 'nombre' }
+        { name: 'nombre', align: 'left', label: 'Nombre Usuario', field: 'nombre' }
       ],
       rowsdetails: [],
       modelrol: [],
@@ -251,7 +251,13 @@ export default {
           obj.rol = datos[i].rol
           obj.feultacceso = datos[i].feultacceso
           obj.estatus = datos[i].estatus === '1' ? 'Activo' : 'Inactivo'
-          this.rows.push(obj)
+          if (datos[i].idrol === '1' || datos[i].idrol === '3') {
+            if (this.co_rol === '1') {
+              this.rows.push(obj)
+            }
+          } else {
+            this.rows.push(obj)
+          }
         }
       }).catch(error => {
         Notify.create('Problemas al listar Usuarios ' + error)

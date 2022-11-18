@@ -42,10 +42,11 @@
           style="float:left;"
         />
         <q-btn
-         label="Seguir con todos los Clientes"
-         v-close-popup color="secondary"
-         @click="todos"
-         style="float: right;"/>
+          v-if="co_rol !== '4'"
+          label="Seguir con todos los Clientes"
+          v-close-popup color="secondary"
+          @click="todos"
+          style="float: right;"/>
       </q-card-section>
     </q-card>
   </div>
@@ -65,6 +66,7 @@ export default {
       usuario: '',
       clave: '',
       loading: false,
+      co_rol: sessionStorage.getItem('co_rol'),
       columns: [
         { name: 'logo', align: 'center', label: 'Logo', field: 'logo', sortable: true },
         { name: 'rif', align: 'center', label: 'RIF', field: 'rif', sortable: true },
@@ -85,7 +87,11 @@ export default {
       sessionStorage.setItem('co_sede_seleted', this.co_sede_seleted)
       sessionStorage.setItem('tx_sede_seleted', this.tx_sede_seleted)
       sessionStorage.setItem('rif_sede_seleted', this.rif_sede_seleted)
-      this.$router.push('/dashboard')
+      if (this.co_rol === '4') {
+        this.$router.push('/reportes')
+      } else {
+        this.$router.push('/dashboard')
+      }
     },
     onClean () {
       this.co_sede_seleted = ''

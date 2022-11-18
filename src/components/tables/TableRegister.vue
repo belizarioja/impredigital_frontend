@@ -24,21 +24,21 @@
         </template>
         <template v-slot:body="props">
           <q-tr :props="props">
-            <q-td v-if="co_rol !== '2'" key="rif" :props="props" style="display: grid;text-align:left;height: 51px;">
+            <q-td v-if="(co_rol === '1' || co_rol === '3') || (co_rol === '2' && !co_sede_seleted)" key="rif" :props="props" style="display: grid;text-align:left;height: 51px;">
               <span style="font-weight: bolder; width: 200px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.razonsocial }}</span>
               <span style="font-style: italic;">RIF: {{ props.row.rif }}</span>
             </q-td>
-            <q-td v-if="co_rol !== '2'"  key="trackingid" :props="props">
+            <q-td v-if="co_rol === '1' || co_rol === '3'"  key="trackingid" :props="props">
               {{ props.row.trackingid }}
             </q-td>
-            <q-td v-if="co_rol !== '2'"  key="tipodocumento" :props="props" style="display: grid;text-align: left;height: 51px;">
+            <q-td v-if="co_rol === '1'"  key="tipodocumento" :props="props" style="display: grid;text-align: left;height: 51px;">
               <span style="font-weight: bolder;">{{ props.row.tipodocumento }}</span>
               <span style="font-style: italic;">N°: {{ props.row.numerodocumento }}</span>
             </q-td>
-            <q-td v-if="co_rol === '2'"  key="tipodocumento" :props="props">
+            <q-td v-if="co_rol === '3' || co_rol === '2'"  key="tipodocumento" :props="props">
               {{ props.row.tipodocumento }}
             </q-td>
-            <q-td v-if="co_rol === '2'"  key="numerodocumento" :props="props">
+            <q-td v-if="co_rol === '3' || co_rol === '2'"  key="numerodocumento" :props="props">
               <span style="font-weight: bolder;">{{ props.row.numerodocumento }}</span>
             </q-td>
             <q-td key="fecha" :props="props">
@@ -86,7 +86,7 @@
         </template>
         <template v-slot:bottom-row>
           <q-tr>
-            <q-td :colspan="co_rol === '2' ? '4' : '5'" class="totales">
+            <q-td :colspan="(co_rol === '1' || co_rol === '3') || (co_rol === '2' && !co_sede_seleted) ? '5' : '4'" class="totales">
               Totales
             </q-td>
             <q-td style="text-align: right;"  class="totales">
@@ -258,6 +258,7 @@ export default defineComponent({
       tx_nombre: sessionStorage.getItem('tx_nombre'),
       co_rol: sessionStorage.getItem('co_rol'),
       idusuario: sessionStorage.getItem('id_usuario'),
+      co_sede_seleted: sessionStorage.getItem('co_sede_seleted'),
       initialPagination: {
         page: 1,
         rowsPerPage: 10 // 0 means all rows
@@ -266,9 +267,9 @@ export default defineComponent({
   },
   data () {
     return {
-      visibleColumns: this.co_rol !== '2'
+      visibleColumns: (this.co_rol === '1' || this.co_rol === '3')
         ? ['rif', 'trackingid', 'tipodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar']
-        : ['tipodocumento', 'numerodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar'],
+        : (this.co_rol === '2' && !this.co_sede_seleted) ? ['rif', 'tipodocumento', 'numerodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar'] : ['tipodocumento', 'numerodocumento', 'fecha', 'nombrecliente', 'iva', 'reducido', 'igtf', 'relacionado', 'detail', 'exportar'],
       columns: [
         {
           name: 'rif',
@@ -281,7 +282,7 @@ export default defineComponent({
         { name: 'trackingid', align: 'left', label: 'Referencia', field: 'trackingid', sortable: true },
         { name: 'tipodocumento', align: 'left', label: 'Documento' },
         { name: 'numerodocumento', align: 'left', label: 'N° de control' },
-        { name: 'fecha', align: 'left', label: 'Fecha', field: 'fecha' },
+        { name: 'fecha', align: 'left', label: 'Fecha y Hora', field: 'fecha' },
         { name: 'nombrecliente', align: 'left', label: 'Nombre Cliente' },
         { name: 'iva', label: 'IVA' },
         { name: 'reducido', label: 'Reducido' },
@@ -500,96 +501,99 @@ export default defineComponent({
         hasta: moment(this.dateTo, 'YYYY/MM/DD').format('YYYY-MM-DD'),
         estatus: 1
       }
-      this.crearbitacora(moment(this.dateFrom, 'YYYY/MM/DD').format('YYYY-MM-DD'), moment(this.dateTo, 'YYYY/MM/DD').format('YYYY-MM-DD'), 2)
-      this.loading = true
-      axios.post(ENDPOINT_PATH_V2 + 'reporte/facturas', body).then(async response => {
-        // console.log(response.data)
-        const datos = response.data.data
-        this.rows = []
-        this.totalbaseg = 0
-        this.totalbaser = 0
-        this.totalbaseigtf = 0
-        this.totalimpuestog = 0
-        this.totalimpuestor = 0
-        this.totalimpuestoigtf = 0
-        for (const i in datos) {
-          // console.log(datos[i])
-          const obj = {}
-          obj.cod = datos[i].id
-          obj.logo = ENDPOINT_PATH_V2 + 'imagen/' + datos[i].rif + '.png'
-          obj.idserviciosmasivo = datos[i].idserviciosmasivo
-          obj.relacionado = datos[i].relacionado
-          obj.razonsocial = datos[i].razonsocial
-          obj.rif = datos[i].rif
-          obj.direccion = datos[i].direccion
-          obj.telefono = datos[i].telefono
-          obj.trackingid = datos[i].trackingid
-          obj.numerodocumento = datos[i].numerodocumento
-          obj.tipodocumento = datos[i].tipodocumento
-          obj.cedulacliente = datos[i].cedulacliente
-          obj.nombrecliente = datos[i].nombrecliente
-          obj.direccioncliente = datos[i].direccioncliente
-          obj.telefonocliente = datos[i].telefonocliente
+      console.log('IP: ', this.term)
+      if (this.term) {
+        this.crearbitacora(moment(this.dateFrom, 'YYYY/MM/DD').format('YYYY-MM-DD'), moment(this.dateTo, 'YYYY/MM/DD').format('YYYY-MM-DD'), 2)
+        this.loading = true
+        axios.post(ENDPOINT_PATH_V2 + 'reporte/facturas', body).then(async response => {
+          // console.log(response.data)
+          const datos = response.data.data
+          this.rows = []
+          this.totalbaseg = 0
+          this.totalbaser = 0
+          this.totalbaseigtf = 0
+          this.totalimpuestog = 0
+          this.totalimpuestor = 0
+          this.totalimpuestoigtf = 0
+          for (const i in datos) {
+            // console.log(datos[i])
+            const obj = {}
+            obj.cod = datos[i].id
+            obj.logo = ENDPOINT_PATH_V2 + 'imagen/' + datos[i].rif + '.png'
+            obj.idserviciosmasivo = datos[i].idserviciosmasivo
+            obj.relacionado = datos[i].relacionado
+            obj.razonsocial = datos[i].razonsocial
+            obj.rif = datos[i].rif
+            obj.direccion = datos[i].direccion
+            obj.telefono = datos[i].telefono
+            obj.trackingid = datos[i].trackingid
+            obj.numerodocumento = datos[i].numerodocumento
+            obj.tipodocumento = datos[i].tipodocumento
+            obj.cedulacliente = datos[i].cedulacliente
+            obj.nombrecliente = datos[i].nombrecliente
+            obj.direccioncliente = datos[i].direccioncliente
+            obj.telefonocliente = datos[i].telefonocliente
 
-          obj.estatus = datos[i].estatus
-          obj.observacion = datos[i].observacion
-          obj.fecha = moment(datos[i].fecha).format('DD/MM/YYYY HH:mm:ss')
-          obj.fechasolo = moment(datos[i].fecha).format('DD/MM/YYYY')
-          obj.hora = moment(datos[i].fecha).format('HH:mm:ss')
+            obj.estatus = datos[i].estatus
+            obj.observacion = datos[i].observacion
+            obj.fecha = moment(datos[i].fecha).format('DD/MM/YYYY HH:mm:ss')
+            obj.fechasolo = moment(datos[i].fecha).format('DD/MM/YYYY')
+            obj.hora = moment(datos[i].fecha).format('HH:mm:ss')
 
-          obj.subtotal = datos[i].subtotal
-          obj.total = datos[i].total
+            obj.subtotal = datos[i].subtotal
+            obj.total = datos[i].total
 
-          obj.tasag = datos[i].tasag
-          obj.tasaigtf = datos[i].tasaigtf
+            obj.tasag = datos[i].tasag
+            obj.tasaigtf = datos[i].tasaigtf
 
-          obj.exento = datos[i].exento || 0
-          obj.exentoN = datos[i].exento || 0
+            obj.exento = datos[i].exento || 0
+            obj.exentoN = datos[i].exento || 0
 
-          obj.baseg = datos[i].baseg || 0
-          obj.basegN = datos[i].baseg || 0
-          obj.impuestogN = datos[i].impuestog || 0
-          obj.baser = datos[i].baser || 0
-          obj.baserN = datos[i].baser || 0
-          obj.impuestorN = datos[i].impuestor || 0
-          obj.baseigtf = datos[i].baseigtf || 0
-          obj.baseigtfN = datos[i].baseigtf || 0
-          obj.impuestoigtfN = datos[i].impuestoigtf || 0
+            obj.baseg = datos[i].baseg || 0
+            obj.basegN = datos[i].baseg || 0
+            obj.impuestogN = datos[i].impuestog || 0
+            obj.baser = datos[i].baser || 0
+            obj.baserN = datos[i].baser || 0
+            obj.impuestorN = datos[i].impuestor || 0
+            obj.baseigtf = datos[i].baseigtf || 0
+            obj.baseigtfN = datos[i].baseigtf || 0
+            obj.impuestoigtfN = datos[i].impuestoigtf || 0
 
-          this.totalbaseg += Number(obj.basegN)
-          this.totalbaser += Number(obj.baserN)
-          this.totalbaseigtf += Number(obj.baseigtfN)
-          this.totalimpuestog += Number(obj.impuestogN)
-          this.totalimpuestor += Number(obj.impuestorN)
-          this.totalimpuestoigtf += Number(obj.impuestoigtfN)
+            this.totalbaseg += Number(obj.basegN)
+            this.totalbaser += Number(obj.baserN)
+            this.totalbaseigtf += Number(obj.baseigtfN)
+            this.totalimpuestog += Number(obj.impuestogN)
+            this.totalimpuestor += Number(obj.impuestorN)
+            this.totalimpuestoigtf += Number(obj.impuestoigtfN)
 
-          datos[i].totalxml = Number(obj.exentoN) + Number(obj.basegN) + Number(obj.impuestogN)
-          datos[i].grandtotalxml = Number(datos[i].totalxml) + Number(obj.baseigtfN) + Number(obj.impuestoigtfN)
-          obj.totalxml = datos[i].totalxml
-          obj.grandtotalxml = datos[i].grandtotalxml
+            datos[i].totalxml = Number(obj.exentoN) + Number(obj.basegN) + Number(obj.impuestogN)
+            datos[i].grandtotalxml = Number(datos[i].totalxml) + Number(obj.baseigtfN) + Number(obj.impuestoigtfN)
+            obj.totalxml = datos[i].totalxml
+            obj.grandtotalxml = datos[i].grandtotalxml
 
-          obj.exento = this.completarDecimales(obj.exento)
-          obj.baseg = this.completarDecimales(obj.baseg)
-          obj.impuestog = this.completarDecimales(obj.impuestogN)
-          obj.baser = this.completarDecimales(obj.baser)
-          obj.impuestor = this.completarDecimales(obj.impuestorN)
-          obj.baseigtf = this.completarDecimales(obj.baseigtf)
-          obj.impuestoigtf = this.completarDecimales(obj.impuestoigtfN)
-          this.rows.push(obj)
-          this.tempxml.push(this.detailXML(datos[i]))
-        }
-        this.loading = false
+            obj.exento = this.completarDecimales(obj.exento)
+            obj.baseg = this.completarDecimales(obj.baseg)
+            obj.impuestog = this.completarDecimales(obj.impuestogN)
+            obj.baser = this.completarDecimales(obj.baser)
+            obj.impuestor = this.completarDecimales(obj.impuestorN)
+            obj.baseigtf = this.completarDecimales(obj.baseigtf)
+            obj.impuestoigtf = this.completarDecimales(obj.impuestoigtfN)
+            this.rows.push(obj)
+            this.tempxml.push(this.detailXML(datos[i]))
+          }
+          this.loading = false
 
-        this.totalbaseg = this.completarDecimales(this.totalbaseg)
-        this.totalbaser = this.completarDecimales(this.totalbaser)
-        this.totalbaseigtf = this.completarDecimales(this.totalbaseigtf)
+          this.totalbaseg = this.completarDecimales(this.totalbaseg)
+          this.totalbaser = this.completarDecimales(this.totalbaser)
+          this.totalbaseigtf = this.completarDecimales(this.totalbaseigtf)
 
-        this.totalimpuestog = this.completarDecimales(this.totalimpuestog)
-        this.totalimpuestor = this.completarDecimales(this.totalimpuestor)
-        this.totalimpuestoigtf = this.completarDecimales(this.totalimpuestoigtf)
-      }).catch(error => {
-        Notify.create('Problemas al listar Facturas ' + error)
-      })
+          this.totalimpuestog = this.completarDecimales(this.totalimpuestog)
+          this.totalimpuestor = this.completarDecimales(this.totalimpuestor)
+          this.totalimpuestoigtf = this.completarDecimales(this.totalimpuestoigtf)
+        }).catch(error => {
+          Notify.create('Problemas al listar Facturas ' + error)
+        })
+      }
     },
     detailXML (row) {
       const objxml = {}

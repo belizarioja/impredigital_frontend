@@ -143,7 +143,7 @@
         class="my-sticky-header-table"
         :title="modeltipo.cod ? modeltipo.name : titulotabla"
         :rows="rows"
-        :columns="co_rol !=='2' ? columns : columns2"
+        :columns="columnseleted"
         row-key="name"
         :pagination="initialPagination"
         style="overflow: auto;"
@@ -160,21 +160,21 @@
         </template>
         <template v-slot:body="props">
           <q-tr :props="props">
-            <q-td v-if="co_rol !== '2'" key="rif" :props="props" style="display: grid;text-align:left;height: 51px;">
+            <q-td v-if="(co_rol === '1' || co_rol === '3') || (co_rol === '2' && !co_sede_seleted)" key="rif" :props="props" style="display: grid;text-align:left;height: 51px;">
               <span style="font-weight: bolder; width: 200px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ props.row.razonsocial }}</span>
               <span style="font-style: italic;">RIF: {{ props.row.rif }}</span>
             </q-td>
-            <q-td v-if="co_rol !== '2'"  key="trackingid" :props="props">
+            <q-td v-if="co_rol === '1' || co_rol === '3'"  key="trackingid" :props="props">
               {{ props.row.trackingid }}
             </q-td>
-            <q-td v-if="co_rol !== '2'"  key="tipodocumento" :props="props" style="display: grid;text-align: left;height: 51px;">
+            <q-td v-if="co_rol === '1' || co_rol === '3'"  key="tipodocumento" :props="props" style="display: grid;text-align: left;height: 51px;">
               <span style="font-weight: bolder;">{{ props.row.tipodocumento }}</span>
               <span style="font-style: italic;">N°: {{ props.row.numerodocumento }}</span>
             </q-td>
-            <q-td v-if="co_rol === '2'"  key="tipodocumento" :props="props">
+            <q-td v-if="co_rol === '2' || co_rol === '4'"  key="tipodocumento" :props="props">
               {{ props.row.tipodocumento }}
             </q-td>
-            <q-td v-if="co_rol === '2'"  key="numerodocumento" :props="props">
+            <q-td v-if="co_rol === '2' || co_rol === '4'"  key="numerodocumento" :props="props">
               <span style="font-weight: bolder;">{{ props.row.numerodocumento }}</span>
             </q-td>
             <q-td key="fecha" :props="props">
@@ -243,7 +243,7 @@
         </template>
         <template v-slot:bottom-row>
           <q-tr>
-            <q-td :colspan="co_rol === '2' ? '6' : '7'" class="totales">
+            <q-td :colspan="(co_rol === '1' || co_rol === '3') || (co_rol === '2' && !co_sede_seleted) ? '7' : '6'" class="totales">
               Totales
             </q-td>
             <q-td style="text-align: right;"  class="totales">
@@ -531,6 +531,7 @@ export default {
   },
   data () {
     return {
+      columnseleted: [],
       columns: [
         {
           name: 'rif',
@@ -543,7 +544,7 @@ export default {
         },
         { name: 'trackingid', align: 'left', label: 'Referencia ID', field: 'trackingid', sortable: true },
         { name: 'tipodocumento', align: 'left', label: 'Documento', sortable: true },
-        { name: 'fecha', align: 'left', label: 'Fecha', field: 'fecha' },
+        { name: 'fecha', align: 'left', label: 'Fecha y Hora', field: 'fecha' },
         { name: 'nombrecliente', align: 'left', label: 'Nombre Cliente', field: 'nombrecliente' },
         { name: 'exento', label: 'Exento', field: 'exento' },
         { name: 'tasag', label: 'Tasa IVA', field: 'tasag' },
@@ -560,9 +561,37 @@ export default {
         { name: 'exportar', label: 'Exportar', align: 'center' }
       ],
       columns2: [
+        {
+          name: 'rif',
+          required: true,
+          label: 'Cliente emisor',
+          align: 'left',
+          field: row => row.razonsocial,
+          format: val => `${val}`,
+          sortable: true
+        },
         { name: 'tipodocumento', align: 'left', label: 'Documento', field: 'tipodocumento', sortable: true },
         { name: 'numerodocumento', align: 'left', label: 'Número de Control', field: 'numerodocumento', sortable: true },
-        { name: 'fecha', align: 'left', label: 'Fecha', field: 'fecha' },
+        { name: 'fecha', align: 'left', label: 'Fecha y Hora', field: 'fecha' },
+        { name: 'nombrecliente', align: 'left', label: 'Nombre Cliente', field: 'nombrecliente' },
+        { name: 'exento', label: 'Exento', field: 'exento' },
+        { name: 'tasag', label: 'Tasa IVA', field: 'tasag' },
+        { name: 'baseg', label: 'Imponible IVA', field: 'baseg' },
+        { name: 'impuestog', label: 'Impuesto IVA', field: 'impuestog' },
+        { name: 'tasar', label: 'Tasa Reducido', field: 'tasar' },
+        { name: 'baser', label: 'Imponible Reducido', field: 'baser' },
+        { name: 'impuestor', label: 'Impuesto Reducido', field: 'impuestor' },
+        { name: 'tasaigtf', label: 'Tasa IGTF', field: 'tasaigtf' },
+        { name: 'baseigtf', label: 'Imponible IGTF', field: 'baseigtf' },
+        { name: 'impuestoigtf', label: 'Impuesto IGTF', field: 'impuestoigtf' },
+        { name: 'relacionado', label: 'Relacionado', field: 'relacionado' },
+        { name: 'detail', label: 'Ver', align: 'center' },
+        { name: 'exportar', label: 'Exportar', align: 'center' }
+      ],
+      columns3: [
+        { name: 'tipodocumento', align: 'left', label: 'Documento', field: 'tipodocumento', sortable: true },
+        { name: 'numerodocumento', align: 'left', label: 'Número de Control', field: 'numerodocumento', sortable: true },
+        { name: 'fecha', align: 'left', label: 'Fecha y Hora', field: 'fecha' },
         { name: 'nombrecliente', align: 'left', label: 'Nombre Cliente', field: 'nombrecliente' },
         { name: 'exento', label: 'Exento', field: 'exento' },
         { name: 'tasag', label: 'Tasa IVA', field: 'tasag' },
@@ -1153,6 +1182,9 @@ export default {
       this.listarsedes()
       this.listartipos()
       this.listarfacturas()
+      // console.log((this.co_rol === '3' || this.co_rol === '4') || (this.co_rol === '2' && this.co_sede_seleted))
+      this.columnseleted = (this.co_rol === '2' && !this.co_sede_seleted)
+        ? this.columns2 : (this.co_rol === '1' || this.co_rol === '3') ? this.columns : this.columns3
       /* setInterval(() => {
         this.listarfacturas()
       }, 3000) */
