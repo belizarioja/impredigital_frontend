@@ -11,7 +11,7 @@
       :pagination="pagination"
     >
       <template v-slot:top>
-        <q-btn v-if="co_rol === '1'" color="primary" :disable="loading" label="Crear usuario" @click="modalcrear = true" />
+        <q-btn color="primary" :disable="loading" label="Crear usuario" @click="modalcrear = true" />
         <q-space />
         <q-input borderless dense debounce="300" color="primary" v-model="filter">
           <template v-slot:append>
@@ -67,6 +67,7 @@
             label="Rol de usuario"
             style="margin: 10px;" />
           <q-select
+            v-if="co_rol === '1'"
             dense
             class="col"
             filled
@@ -80,8 +81,8 @@
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancel" v-close-popup />
-          <q-btn flat label="Aceptar" @click="crearusuario"/>
+          <q-btn color="secondary" label="Cancelar" v-close-popup />
+          <q-btn color="primary" label="Aceptar" @click="crearusuario"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -271,7 +272,13 @@ export default {
           const obj = {}
           obj.cod = datos[i].id
           obj.name = datos[i].rol
-          this.optionsrol.push(obj)
+          if (datos[i].id === '1' || datos[i].id === '3') {
+            if (this.co_rol === '1') {
+              this.optionsrol.push(obj)
+            }
+          } else {
+            this.optionsrol.push(obj)
+          }
         }
       }).catch(error => {
         Notify.create('Problemas al listar Roles ' + error)

@@ -17,6 +17,7 @@ const routes = [
       { path: '/simulador', component: () => import('pages/Simulador.vue') },
       { path: '/simulador2', component: () => import('pages/Simulador2.vue') },
       { path: '/reportes', component: () => import('pages/Reportes.vue') },
+      { path: '/consulta', component: () => import('pages/Consulta.vue') },
       { path: '/anulaciones', component: () => import('pages/Anulaciones.vue') },
       { path: '/auditorias', component: () => import('pages/Bitacoras.vue') }
     ]

@@ -56,20 +56,20 @@
                 <div>Indicadores principales</div>
               </q-item-section>
             </q-item>
-            <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="usuarios" style="font-size: 12px;">
+            <q-item clickable v-ripple @click="consulta" style="font-size: 12px;">
               <q-item-section avatar>
-                <q-icon color="black" name="manage_accounts" />
+                <q-icon color="black" name="summarize" />
               </q-item-section>
               <q-item-section>
-                <div>Usuarios</div>
+                <div>Consulta</div>
               </q-item-section>
             </q-item>
-            <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="sedes" style="font-size: 12px;">
+            <q-item clickable v-ripple @click="anulaciones" style="font-size: 12px;">
               <q-item-section avatar>
-                <q-icon color="black" name="store" />
+                <q-icon color="black" name="bookmark_remove" />
               </q-item-section>
               <q-item-section>
-                <div>Cliente emisor</div>
+                <div>Anulaciones</div>
               </q-item-section>
             </q-item>
             <q-item clickable v-ripple @click="reportes" style="font-size: 12px;">
@@ -80,12 +80,20 @@
                 <div>Reportes</div>
               </q-item-section>
             </q-item>
-            <q-item clickable v-ripple @click="anulaciones" style="font-size: 12px;">
+            <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="sedes" style="font-size: 12px;">
               <q-item-section avatar>
-                <q-icon color="black" name="bookmark_remove" />
+                <q-icon color="black" name="store" />
               </q-item-section>
               <q-item-section>
-                <div>Anulaciones</div>
+                <div>Cliente emisor</div>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="usuarios" style="font-size: 12px;">
+              <q-item-section avatar>
+                <q-icon color="black" name="manage_accounts" />
+              </q-item-section>
+              <q-item-section>
+                <div>Usuarios</div>
               </q-item-section>
             </q-item>
             <q-item v-if="co_rol === '1' || co_rol === '2'" clickable v-ripple @click="auditorias" style="font-size: 12px;">
@@ -180,6 +188,9 @@ export default defineComponent({
       sessionStorage.removeItem('tx_sede_seleted')
       sessionStorage.removeItem('rif_sede_seleted')
       this.$router.push('/emisores')
+    },
+    consulta () {
+      this.$router.push('/consulta')
     },
     reportes () {
       this.$router.push('/reportes')

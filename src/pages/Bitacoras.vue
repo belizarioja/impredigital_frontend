@@ -159,13 +159,7 @@ export default {
           obj.name = datos[i].nombre
           obj.usuario = datos[i].usuario
           obj.nameuser = datos[i].usuario + ' ' + datos[i].nombre
-          if (datos[i].idrol === '1' || datos[i].idrol === '3') {
-            if (this.co_rol === '1') {
-              this.optionsusuarios.push(obj)
-            }
-          } else {
-            this.optionsusuarios.push(obj)
-          }
+          this.optionsusuarios.push(obj)
           this.usuarios = this.optionsusuarios
         }
       }).catch(error => {
@@ -204,7 +198,7 @@ export default {
         console.log(datos)
         this.rowstodos = []
         let cont = 0
-        for (const i in datos) {
+        for (const i in datos.reverse()) {
           const obj = {}
           cont = Number(cont) + Number(1)
           obj.num = cont
@@ -216,13 +210,7 @@ export default {
           obj.ip = datos[i].ip
           obj.observacion = datos[i].observacion
           obj.fecha = moment(datos[i].fecha).format('DD/MM/YYYY HH:mm:ss')
-          if (datos[i].usuario === 'imprenta' || datos[i].usuario === 'emisor') {
-            if (this.co_rol === '1') {
-              this.rowstodos.push(obj)
-            }
-          } else {
-            this.rowstodos.push(obj)
-          }
+          this.rowstodos.push(obj)
         }
       }).catch(error => {
         Notify.create('Problemas al listar Detalles bitacora ' + error)
